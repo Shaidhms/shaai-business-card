@@ -1,5 +1,5 @@
 /* ============================================
-   S.H.A.A.I Solutions - 3D Interactive Card v3
+   Shaid Hakkeem - 3D Interactive Card v3
    Ultra-smooth Mobile + Creative Effects
    ============================================ */
 
@@ -93,7 +93,7 @@ document.addEventListener('touchstart', firstInteraction);
 // CINEMATIC INTRO
 // ==========================================
 const introBrand = document.getElementById('introBrand');
-const introText = 'S.H.A.A.I';
+const introText = 'SHAID';
 let charIndex = 0;
 
 function typeIntro() {
@@ -532,15 +532,14 @@ document.getElementById('saveContact').addEventListener('click', (e) => {
 VERSION:3.0
 FN:Muhibbuddin Shaid Hakkeem
 N:Hakkeem;Muhibbuddin Shaid;;;
-ORG:S.H.A.A.I Solutions
-TITLE:Founder - Web Development & Digital Solutions
+TITLE:Freelance Developer - Web, AI & Automation
 TEL;TYPE=CELL:+916380257066
 EMAIL;TYPE=INTERNET:mail2shaid@gmail.com
 URL:https://www.shaid360.com
 X-SOCIALPROFILE;TYPE=linkedin:https://www.linkedin.com/in/muhibbuddin-shaid-hakkeem-26a06921/
 X-SOCIALPROFILE;TYPE=github:https://github.com/Shaidhms
 X-SOCIALPROFILE;TYPE=instagram:https://www.instagram.com/ai360_with_shaid/
-NOTE:AI Automation Expert | Voice Agent Builder | 3D Web Designer | SIH Evaluator | Buildathon Winner
+NOTE:Freelance Developer | AI Automation | Voice Agents | 3D Web Design | SIH Evaluator | Buildathon Winner
 END:VCARD`;
 
   const blob = new Blob([vCard], { type: 'text/vcard' });
@@ -563,8 +562,8 @@ document.getElementById('shareCard').addEventListener('click', async (e) => {
   playSound('click');
 
   const data = {
-    title: 'Shaid Hakkeem | S.H.A.A.I Solutions',
-    text: 'Check out Shaid Hakkeem - Web Development & Digital Solutions!',
+    title: 'Shaid Hakkeem | Freelance Developer',
+    text: 'Check out Shaid Hakkeem - Freelance Web Developer, AI & Automation!',
     url: 'https://www.shaid360.com',
   };
 
@@ -618,7 +617,7 @@ let chatOpen = false;
 const faqData = [
   {
     keywords: ['who', 'about', 'yourself', 'introduce', 'name', 'you'],
-    answer: "I'm Muhibbuddin Shaid Hakkeem, founder of S.H.A.A.I Solutions. I specialize in Web Development, AI Automation, Voice Agents, and 3D Interactive Websites. With 15+ years of experience, I turn ideas into reality for clients across India and the Gulf region."
+    answer: "I'm Muhibbuddin Shaid Hakkeem, a freelance developer specializing in Web Development, AI Automation, Voice Agents, and 3D Interactive Websites. With 15+ years of experience, I turn ideas into reality for clients across India and the Gulf region."
   },
   {
     keywords: ['do', 'services', 'offer', 'what do', 'work', 'specialize'],
