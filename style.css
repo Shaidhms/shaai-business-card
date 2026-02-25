@@ -1853,31 +1853,35 @@ html, body {
   inset: 2px;
 }
 
-/* Floating camera bubble for group selfies */
+/* Floating camera bubble for group selfies — draggable */
 .cam-float-bubble {
   position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(calc(170px + 16px));
-  width: 48px;
-  height: 48px;
+  top: auto;
+  left: auto;
+  right: 16px;
+  bottom: 100px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   border: 2px solid var(--gold);
-  background: rgba(13, 13, 26, 0.9);
+  background: rgba(13, 13, 26, 0.92);
   color: var(--gold);
-  cursor: pointer;
+  cursor: grab;
   display: none;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   z-index: 1002;
   box-shadow:
-    0 4px 20px rgba(212, 165, 116, 0.25),
+    0 4px 20px rgba(212, 165, 116, 0.3),
     0 0 30px rgba(212, 165, 116, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: left 0.3s ease, top 0.3s ease, box-shadow 0.3s ease;
   animation: floatBubblePulse 2s ease-in-out infinite;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .cam-float-bubble.visible {
@@ -1885,24 +1889,17 @@ html, body {
 }
 
 .cam-float-bubble:active {
-  transform: translateX(calc(170px + 16px)) scale(0.92);
-  transition-duration: 0.1s;
+  cursor: grabbing;
 }
 
 @keyframes floatBubblePulse {
-  0%, 100% { box-shadow: 0 4px 20px rgba(212, 165, 116, 0.25), 0 0 30px rgba(212, 165, 116, 0.1); }
-  50% { box-shadow: 0 4px 25px rgba(212, 165, 116, 0.35), 0 0 40px rgba(212, 165, 116, 0.2); }
+  0%, 100% { box-shadow: 0 4px 20px rgba(212, 165, 116, 0.3), 0 0 30px rgba(212, 165, 116, 0.1); }
+  50% { box-shadow: 0 4px 25px rgba(212, 165, 116, 0.4), 0 0 40px rgba(212, 165, 116, 0.2); }
 }
 
 @media (max-width: 420px) {
   .cam-float-bubble {
-    left: auto;
-    right: 16px;
-    bottom: 80px;
-    transform: none;
-  }
-  .cam-float-bubble:active {
-    transform: scale(0.92);
+    /* JS will override position via top/left */
   }
 }
 

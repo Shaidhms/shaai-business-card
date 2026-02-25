@@ -908,6 +908,11 @@ let photoDataUrl = null;
 
 function openConnect() {
   connectOverlay.classList.add('open');
+  // Position bubble at bottom-right then show
+  camFloatBubble.style.right = '16px';
+  camFloatBubble.style.bottom = '100px';
+  camFloatBubble.style.left = '';
+  camFloatBubble.style.top = '';
   camFloatBubble.classList.add('visible');
   startCamera();
   playSound('click');
@@ -991,18 +996,69 @@ camSnapBtn.addEventListener('click', (e) => {
   setTimeout(() => { wrap.style.boxShadow = ''; }, 400);
 });
 
-// Floating bubble triggers snap
-camFloatBubble.addEventListener('click', (e) => {
-  e.stopPropagation();
-  if (camStream) {
-    camSnapBtn.click();
-  } else if (!photoDataUrl) {
-    // Restart camera and snap
-    startCamera().then(() => {
-      setTimeout(() => camSnapBtn.click(), 500);
-    });
+// Floating bubble — draggable + triggers snap
+(function() {
+  let isDragging = false;
+  let wasDragged = false;
+  let startX, startY, bubbleX, bubbleY;
+
+  function setBubblePos(x, y) {
+    const s = camFloatBubble.offsetWidth;
+    x = Math.max(4, Math.min(window.innerWidth - s - 4, x));
+    y = Math.max(4, Math.min(window.innerHeight - s - 4, y));
+    // Switch to top/left, clear right/bottom
+    camFloatBubble.style.right = 'auto';
+    camFloatBubble.style.bottom = 'auto';
+    camFloatBubble.style.left = x + 'px';
+    camFloatBubble.style.top = y + 'px';
   }
-});
+
+  camFloatBubble.addEventListener('touchstart', (e) => {
+    isDragging = true;
+    wasDragged = false;
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    const rect = camFloatBubble.getBoundingClientRect();
+    bubbleX = rect.left;
+    bubbleY = rect.top;
+    camFloatBubble.style.transition = 'none';
+    camFloatBubble.style.animation = 'none';
+  }, { passive: true });
+
+  camFloatBubble.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) wasDragged = true;
+    setBubblePos(bubbleX + dx, bubbleY + dy);
+  }, { passive: true });
+
+  camFloatBubble.addEventListener('touchend', () => {
+    isDragging = false;
+    // Smooth snap to nearest edge
+    camFloatBubble.style.transition = 'left 0.3s ease, top 0.3s ease';
+    camFloatBubble.style.animation = '';
+    const rect = camFloatBubble.getBoundingClientRect();
+    const midX = rect.left + rect.width / 2;
+    const snapX = midX < window.innerWidth / 2 ? 12 : window.innerWidth - rect.width - 12;
+    setBubblePos(snapX, rect.top);
+  }, { passive: true });
+
+  // Click only fires snap if not dragged
+  camFloatBubble.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (wasDragged) return;
+    if (camStream) {
+      camSnapBtn.click();
+    } else if (!photoDataUrl) {
+      startCamera().then(() => {
+        setTimeout(() => camSnapBtn.click(), 500);
+      });
+    }
+  });
+})();
 
 // Retake
 camRetakeBtn.addEventListener('click', (e) => {
