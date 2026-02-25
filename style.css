@@ -1676,16 +1676,22 @@ html, body {
   color: var(--text-primary);
 }
 
-/* GFF Logo */
+/* GFF Logo Banner */
 .connect-gff-logo {
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  padding: 14px 16px 10px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 238, 235, 0.92) 100%);
+  border: 1px solid rgba(212, 165, 116, 0.2);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .connect-gff-logo img {
-  width: 180px;
+  width: 200px;
   height: auto;
-  filter: drop-shadow(0 0 8px rgba(212, 165, 116, 0.15));
 }
 
 .connect-title {
@@ -1717,7 +1723,7 @@ html, body {
   height: 130px;
   border-radius: 50%;
   margin: 0 auto 14px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   background: rgba(212, 165, 116, 0.03);
   border: 2px solid rgba(212, 165, 116, 0.25);
@@ -1727,6 +1733,8 @@ html, body {
 }
 
 .connect-cam-wrap video {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1736,6 +1744,8 @@ html, body {
 }
 
 .connect-cam-wrap .connect-cam-photo {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1846,24 +1856,25 @@ html, body {
 /* Floating camera bubble for group selfies */
 .cam-float-bubble {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 52px;
-  height: 52px;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(calc(170px + 16px));
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   border: 2px solid var(--gold);
-  background: linear-gradient(135deg, rgba(212, 165, 116, 0.15), rgba(212, 165, 116, 0.08));
+  background: rgba(13, 13, 26, 0.9);
   color: var(--gold);
   cursor: pointer;
   display: none;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   z-index: 1002;
   box-shadow:
     0 4px 20px rgba(212, 165, 116, 0.25),
     0 0 30px rgba(212, 165, 116, 0.1);
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: floatBubblePulse 2s ease-in-out infinite;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -1873,21 +1884,26 @@ html, body {
   display: flex;
 }
 
-.cam-float-bubble:hover {
-  transform: scale(1.1);
-  box-shadow:
-    0 6px 25px rgba(212, 165, 116, 0.35),
-    0 0 40px rgba(212, 165, 116, 0.15);
-}
-
 .cam-float-bubble:active {
-  transform: scale(0.92);
+  transform: translateX(calc(170px + 16px)) scale(0.92);
   transition-duration: 0.1s;
 }
 
 @keyframes floatBubblePulse {
   0%, 100% { box-shadow: 0 4px 20px rgba(212, 165, 116, 0.25), 0 0 30px rgba(212, 165, 116, 0.1); }
   50% { box-shadow: 0 4px 25px rgba(212, 165, 116, 0.35), 0 0 40px rgba(212, 165, 116, 0.2); }
+}
+
+@media (max-width: 420px) {
+  .cam-float-bubble {
+    left: auto;
+    right: 16px;
+    bottom: 80px;
+    transform: none;
+  }
+  .cam-float-bubble:active {
+    transform: scale(0.92);
+  }
 }
 
 /* Form Fields */
