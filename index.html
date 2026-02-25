@@ -24,12 +24,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Loading Screen -->
-  <div class="loader" id="loader">
-    <div class="loader-content">
-      <div class="loader-logo">S.H.A.A.I</div>
-      <div class="loader-bar"><div class="loader-fill"></div></div>
+  <!-- Cinematic Intro -->
+  <div class="cinematic-intro" id="cinematicIntro">
+    <div class="intro-dot" id="introDot"></div>
+    <div class="intro-line" id="introLine"></div>
+    <div class="intro-text" id="introText">
+      <span class="intro-brand" id="introBrand"></span>
+      <span class="intro-sub" id="introSub">SOLUTIONS</span>
     </div>
+    <div class="intro-status" id="introStatus">INITIALIZING...</div>
+    <div class="intro-outline" id="introOutline"></div>
   </div>
 
   <!-- Three.js Background Canvas -->
@@ -38,19 +42,25 @@
   <!-- Ambient Glow -->
   <div class="ambient-glow"></div>
 
+  <!-- Mute Button -->
+  <button class="mute-btn" id="muteBtn" title="Toggle Sound">
+    <i class="fa-solid fa-volume-high" id="muteIcon"></i>
+  </button>
+
   <!-- Card Instruction -->
   <div class="instruction" id="instruction">
-    <i class="fa-solid fa-hand-pointer"></i> Tap the card to flip
+    <i class="fa-solid fa-hand-pointer"></i> Tap to flip &middot; Drag to throw
   </div>
 
   <!-- Main Card Container -->
-  <div class="card-wrapper">
+  <div class="card-wrapper" id="cardWrapper">
     <div class="card-container" id="cardContainer">
       <div class="card" id="card">
 
         <!-- ===== FRONT FACE ===== -->
         <div class="card-face card-front">
           <div class="card-shine"></div>
+          <div class="holo-shimmer"></div>
           <div class="card-border-glow"></div>
 
           <div class="front-content">
@@ -76,6 +86,24 @@
               <h1 class="last-name">SHAID HAKKEEM</h1>
             </div>
 
+            <!-- Animated Stats -->
+            <div class="stats-section">
+              <div class="stat-item">
+                <span class="stat-number" data-target="20">0</span><span class="stat-plus">+</span>
+                <span class="stat-label">Projects</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-number" data-target="15">0</span><span class="stat-plus">+</span>
+                <span class="stat-label">Clients</span>
+              </div>
+              <div class="stat-divider"></div>
+              <div class="stat-item">
+                <span class="stat-number" data-target="3">0</span><span class="stat-plus">+</span>
+                <span class="stat-label">Years</span>
+              </div>
+            </div>
+
             <!-- Tagline -->
             <div class="tagline">
               <p class="tagline-main">Web Development & Digital Solutions</p>
@@ -95,6 +123,7 @@
         <!-- ===== BACK FACE ===== -->
         <div class="card-face card-back">
           <div class="card-shine"></div>
+          <div class="holo-shimmer"></div>
           <div class="card-border-glow"></div>
 
           <div class="back-content">
@@ -151,6 +180,35 @@
                 <div class="achievement-badge">
                   <i class="fa-solid fa-robot"></i>
                   <span>AI Automation Expert</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini Project Showcase -->
+            <div class="projects-section">
+              <div class="section-title">
+                <i class="fa-solid fa-rocket"></i> Recent Work
+              </div>
+              <div class="projects-scroll">
+                <div class="project-card">
+                  <div class="project-icon"><i class="fa-solid fa-microphone-lines"></i></div>
+                  <span>Voice Agents</span>
+                </div>
+                <div class="project-card">
+                  <div class="project-icon"><i class="fa-solid fa-cube"></i></div>
+                  <span>3D Websites</span>
+                </div>
+                <div class="project-card">
+                  <div class="project-icon"><i class="fa-solid fa-brain"></i></div>
+                  <span>AI Dashboards</span>
+                </div>
+                <div class="project-card">
+                  <div class="project-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                  <span>E-Commerce</span>
+                </div>
+                <div class="project-card">
+                  <div class="project-icon"><i class="fa-solid fa-mobile-screen"></i></div>
+                  <span>Mobile Apps</span>
                 </div>
               </div>
             </div>

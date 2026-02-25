@@ -1,7 +1,136 @@
 /* ============================================
-   S.H.A.A.I Solutions - 3D Interactive Card
-   Three.js Background + Card Physics
+   S.H.A.A.I Solutions - 3D Interactive Card v2
+   Three.js + Physics + Sound + Holographic
    ============================================ */
+
+// ==========================================
+// SOUND ENGINE (Web Audio API)
+// ==========================================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let isMuted = false;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new AudioCtx();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playSound(type) {
+  if (isMuted || !audioCtx) return;
+  try {
+    if (type === 'whoosh') playSwoosh();
+    else if (type === 'click') playClick();
+    else if (type === 'intro') playIntroChord();
+    else if (type === 'bounce') playBounce();
+  } catch (e) { /* silent fail */ }
+}
+
+function playSwoosh() {
+  const duration = 0.25;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + duration);
+
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+  filter.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + duration);
+  filter.Q.value = 2;
+
+  gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+  osc.connect(filter).connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+
+function playClick() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 1200;
+  gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.06);
+}
+
+function playBounce() {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.15);
+  gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.15);
+}
+
+function playIntroChord() {
+  const freqs = [220, 277, 330, 440];
+  freqs.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.03, audioCtx.currentTime + 0.3 + i * 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + i * 0.08);
+    osc.stop(audioCtx.currentTime + 2);
+  });
+}
+
+// Mute button
+const muteBtn = document.getElementById('muteBtn');
+const muteIcon = document.getElementById('muteIcon');
+muteBtn.addEventListener('click', () => {
+  isMuted = !isMuted;
+  muteBtn.classList.toggle('muted', isMuted);
+  muteIcon.className = isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+  playSound('click');
+});
+
+// Init audio on first interaction
+document.addEventListener('click', () => initAudio(), { once: true });
+document.addEventListener('touchstart', () => initAudio(), { once: true });
+
+// ==========================================
+// CINEMATIC INTRO
+// ==========================================
+const introBrand = document.getElementById('introBrand');
+const introText = 'S.H.A.A.I';
+let charIndex = 0;
+
+function typeIntro() {
+  if (charIndex < introText.length) {
+    introBrand.textContent += introText[charIndex];
+    charIndex++;
+    setTimeout(typeIntro, 100 + Math.random() * 80);
+  }
+}
+
+// Start typing after dot appears
+setTimeout(typeIntro, 1000);
+
+// Hide intro and reveal card
+setTimeout(() => {
+  document.getElementById('cinematicIntro').classList.add('hidden');
+  initAudio();
+  playSound('intro');
+}, 3200);
 
 // ==========================================
 // THREE.JS SCENE SETUP
@@ -75,12 +204,8 @@ scene.add(lines);
 const shapes = [];
 const shapeGroup = new THREE.Group();
 
-// Create floating icosahedrons
 for (let i = 0; i < 8; i++) {
-  const geometry = new THREE.IcosahedronGeometry(
-    Math.random() * 0.8 + 0.3,
-    0
-  );
+  const geometry = new THREE.IcosahedronGeometry(Math.random() * 0.8 + 0.3, 0);
   const material = new THREE.MeshBasicMaterial({
     color: i % 2 === 0 ? 0xd4a574 : 0x06b6d4,
     wireframe: true,
@@ -94,10 +219,7 @@ for (let i = 0; i < 8; i++) {
     (Math.random() - 0.5) * 20
   );
   mesh.userData = {
-    rotSpeed: {
-      x: (Math.random() - 0.5) * 0.005,
-      y: (Math.random() - 0.5) * 0.005,
-    },
+    rotSpeed: { x: (Math.random() - 0.5) * 0.005, y: (Math.random() - 0.5) * 0.005 },
     floatSpeed: Math.random() * 0.002 + 0.001,
     floatOffset: Math.random() * Math.PI * 2,
   };
@@ -105,7 +227,6 @@ for (let i = 0; i < 8; i++) {
   shapes.push(mesh);
 }
 
-// Create floating octahedrons
 for (let i = 0; i < 5; i++) {
   const geometry = new THREE.OctahedronGeometry(Math.random() * 0.6 + 0.2, 0);
   const material = new THREE.MeshBasicMaterial({
@@ -121,10 +242,7 @@ for (let i = 0; i < 5; i++) {
     (Math.random() - 0.5) * 15
   );
   mesh.userData = {
-    rotSpeed: {
-      x: (Math.random() - 0.5) * 0.003,
-      y: (Math.random() - 0.5) * 0.003,
-    },
+    rotSpeed: { x: (Math.random() - 0.5) * 0.003, y: (Math.random() - 0.5) * 0.003 },
     floatSpeed: Math.random() * 0.001 + 0.0005,
     floatOffset: Math.random() * Math.PI * 2,
   };
@@ -135,7 +253,7 @@ for (let i = 0; i < 5; i++) {
 scene.add(shapeGroup);
 
 // ==========================================
-// MOUSE TRACKING
+// MOUSE TRACKING (for background)
 // ==========================================
 const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
 
@@ -158,37 +276,29 @@ function animateScene() {
   requestAnimationFrame(animateScene);
   time += 0.01;
 
-  // Smooth mouse
   mouse.x += (mouse.targetX - mouse.x) * 0.05;
   mouse.y += (mouse.targetY - mouse.y) * 0.05;
 
-  // Animate particles
   const positions = particles.geometry.attributes.position.array;
   for (let i = 0; i < PARTICLE_COUNT; i++) {
     positions[i * 3] += particleSpeeds[i].x;
     positions[i * 3 + 1] += particleSpeeds[i].y;
     positions[i * 3 + 2] += particleSpeeds[i].z;
-
-    // Wrap around
     if (Math.abs(positions[i * 3]) > 30) particleSpeeds[i].x *= -1;
     if (Math.abs(positions[i * 3 + 1]) > 30) particleSpeeds[i].y *= -1;
     if (Math.abs(positions[i * 3 + 2]) > 15) particleSpeeds[i].z *= -1;
   }
   particles.geometry.attributes.position.needsUpdate = true;
 
-  // Update connection lines
   let lineIndex = 0;
   const linePos = lines.geometry.attributes.position.array;
-  const CONNECTION_DIST = 8;
-
   for (let i = 0; i < PARTICLE_COUNT && lineIndex < MAX_LINES; i++) {
     for (let j = i + 1; j < PARTICLE_COUNT && lineIndex < MAX_LINES; j++) {
       const dx = positions[i * 3] - positions[j * 3];
       const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
       const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
       const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-      if (dist < CONNECTION_DIST) {
+      if (dist < 8) {
         linePos[lineIndex * 6] = positions[i * 3];
         linePos[lineIndex * 6 + 1] = positions[i * 3 + 1];
         linePos[lineIndex * 6 + 2] = positions[i * 3 + 2];
@@ -199,18 +309,15 @@ function animateScene() {
       }
     }
   }
-
   lines.geometry.setDrawRange(0, lineIndex * 2);
   lines.geometry.attributes.position.needsUpdate = true;
 
-  // Animate shapes
   shapes.forEach((shape) => {
     shape.rotation.x += shape.userData.rotSpeed.x;
     shape.rotation.y += shape.userData.rotSpeed.y;
     shape.position.y += Math.sin(time + shape.userData.floatOffset) * shape.userData.floatSpeed;
   });
 
-  // Scene follows mouse slightly
   shapeGroup.rotation.y = mouse.x * 0.08;
   shapeGroup.rotation.x = mouse.y * 0.05;
   particles.rotation.y = mouse.x * 0.03;
@@ -236,13 +343,13 @@ window.addEventListener('resize', () => {
 // ==========================================
 const card = document.getElementById('card');
 const cardContainer = document.getElementById('cardContainer');
+const cardWrapper = document.getElementById('cardWrapper');
 const flipBackBtn = document.getElementById('flipBackBtn');
 const instruction = document.getElementById('instruction');
 let isFlipped = false;
-let isDragging = false;
 let hasFlippedOnce = false;
 
-// --- Card Tilt (Mouse/Touch) ---
+// --- Tilt State ---
 let tiltX = 0;
 let tiltY = 0;
 let targetTiltX = 0;
@@ -250,103 +357,228 @@ let targetTiltY = 0;
 let currentFlipAngle = 0;
 let targetFlipAngle = 0;
 
-cardContainer.addEventListener('mousemove', (e) => {
-  if (isDragging) return;
-  const rect = cardContainer.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  const centerX = rect.width / 2;
-  const centerY = rect.height / 2;
+// --- Throw Physics State ---
+let throwX = 0;
+let throwY = 0;
+let velocityX = 0;
+let velocityY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let dragStartTime = 0;
+let lastDragX = 0;
+let lastDragY = 0;
+let lastDragTime = 0;
+let dragDistance = 0;
+const FRICTION = 0.94;
+const BOUNCE_DAMP = 0.5;
+const SPRING_BACK = 0.03;
+const DRAG_THRESHOLD = 15;
 
-  targetTiltX = ((y - centerY) / centerY) * -12;
-  targetTiltY = ((x - centerX) / centerX) * 12;
-});
+// ==========================================
+// THROW PHYSICS - Event Handlers
+// ==========================================
+function getPointerPos(e) {
+  if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
 
-cardContainer.addEventListener('mouseleave', () => {
+function onDragStart(e) {
+  const pos = getPointerPos(e);
+  isDragging = true;
+  dragStartX = pos.x;
+  dragStartY = pos.y;
+  dragStartTime = Date.now();
+  lastDragX = pos.x;
+  lastDragY = pos.y;
+  lastDragTime = Date.now();
+  dragDistance = 0;
+  velocityX = 0;
+  velocityY = 0;
+  cardContainer.classList.add('grabbing');
+}
+
+function onDragMove(e) {
+  if (!isDragging) return;
+  const pos = getPointerPos(e);
+  const now = Date.now();
+  const dx = pos.x - lastDragX;
+  const dy = pos.y - lastDragY;
+  const dt = Math.max(now - lastDragTime, 1);
+
+  throwX += dx;
+  throwY += dy;
+  dragDistance += Math.abs(dx) + Math.abs(dy);
+
+  velocityX = dx / dt * 16;
+  velocityY = dy / dt * 16;
+
+  lastDragX = pos.x;
+  lastDragY = pos.y;
+  lastDragTime = now;
+
+  // Update tilt based on drag direction
+  targetTiltX = Math.max(-15, Math.min(15, -dy * 0.3));
+  targetTiltY = Math.max(-15, Math.min(15, dx * 0.3));
+}
+
+function onDragEnd() {
+  if (!isDragging) return;
+  isDragging = false;
+  cardContainer.classList.remove('grabbing');
+
+  // If it was a short tap (not a drag), flip the card
+  if (dragDistance < DRAG_THRESHOLD) {
+    flipCard();
+  }
+
+  // Reset tilt targets
   targetTiltX = 0;
   targetTiltY = 0;
+}
+
+// Mouse events
+cardContainer.addEventListener('mousedown', onDragStart);
+window.addEventListener('mousemove', (e) => {
+  onDragMove(e);
+  // Tilt when not dragging
+  if (!isDragging) {
+    const rect = cardContainer.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2 + throwX;
+    const cy = rect.top + rect.height / 2 + throwY;
+    targetTiltX = ((e.clientY - cy) / (rect.height / 2)) * -10;
+    targetTiltY = ((e.clientX - cx) / (rect.width / 2)) * 10;
+  }
 });
+window.addEventListener('mouseup', onDragEnd);
 
-// Touch tilt
-cardContainer.addEventListener('touchmove', (e) => {
-  if (isDragging) return;
-  const touch = e.touches[0];
-  const rect = cardContainer.getBoundingClientRect();
-  const x = touch.clientX - rect.left;
-  const y = touch.clientY - rect.top;
-  const centerX = rect.width / 2;
-  const centerY = rect.height / 2;
-
-  targetTiltX = ((y - centerY) / centerY) * -8;
-  targetTiltY = ((x - centerX) / centerX) * 8;
+// Touch events
+cardContainer.addEventListener('touchstart', (e) => {
+  onDragStart(e);
 }, { passive: true });
+window.addEventListener('touchmove', (e) => {
+  onDragMove(e);
+}, { passive: true });
+window.addEventListener('touchend', onDragEnd);
 
-cardContainer.addEventListener('touchend', () => {
-  targetTiltX = 0;
-  targetTiltY = 0;
+// Reset tilt when pointer leaves window
+window.addEventListener('mouseleave', () => {
+  if (!isDragging) {
+    targetTiltX = 0;
+    targetTiltY = 0;
+  }
 });
 
-// --- Device Orientation (Gyroscope for mobile) ---
+// --- Device Orientation (Gyroscope) ---
 if (window.DeviceOrientationEvent) {
   window.addEventListener('deviceorientation', (e) => {
-    if (e.gamma !== null && e.beta !== null) {
+    if (!isDragging && e.gamma !== null && e.beta !== null) {
       targetTiltY = Math.max(-15, Math.min(15, e.gamma * 0.4));
       targetTiltX = Math.max(-15, Math.min(15, (e.beta - 45) * 0.3));
     }
   });
 }
 
-// --- Tilt Animation Loop ---
-function animateTilt() {
-  requestAnimationFrame(animateTilt);
+// ==========================================
+// MAIN ANIMATION LOOP (Tilt + Throw + Holo)
+// ==========================================
+function animateCard() {
+  requestAnimationFrame(animateCard);
 
+  // --- Throw Physics ---
+  if (!isDragging) {
+    // Apply velocity with friction
+    throwX += velocityX;
+    throwY += velocityY;
+    velocityX *= FRICTION;
+    velocityY *= FRICTION;
+
+    // Bounce off edges
+    const ww = window.innerWidth;
+    const wh = window.innerHeight;
+    const cw = cardContainer.offsetWidth;
+    const ch = cardContainer.offsetHeight;
+    const maxX = (ww - cw) / 2;
+    const maxY = (wh - ch) / 2;
+
+    if (throwX > maxX) {
+      throwX = maxX;
+      velocityX *= -BOUNCE_DAMP;
+      playSound('bounce');
+    } else if (throwX < -maxX) {
+      throwX = -maxX;
+      velocityX *= -BOUNCE_DAMP;
+      playSound('bounce');
+    }
+
+    if (throwY > maxY) {
+      throwY = maxY;
+      velocityY *= -BOUNCE_DAMP;
+      playSound('bounce');
+    } else if (throwY < -maxY) {
+      throwY = -maxY;
+      velocityY *= -BOUNCE_DAMP;
+      playSound('bounce');
+    }
+
+    // Spring back to center when velocity is low
+    const speed = Math.abs(velocityX) + Math.abs(velocityY);
+    if (speed < 0.5) {
+      throwX += (0 - throwX) * SPRING_BACK;
+      throwY += (0 - throwY) * SPRING_BACK;
+    }
+  }
+
+  // Apply position
+  cardContainer.style.transform = `translate(${throwX}px, ${throwY}px)`;
+
+  // --- Tilt ---
   tiltX += (targetTiltX - tiltX) * 0.08;
   tiltY += (targetTiltY - tiltY) * 0.08;
 
-  // Smooth flip interpolation
+  // Smooth flip
   targetFlipAngle = isFlipped ? 180 : 0;
   currentFlipAngle += (targetFlipAngle - currentFlipAngle) * 0.1;
   card.style.transform = `rotateY(${currentFlipAngle + tiltY}deg) rotateX(${tiltX}deg)`;
 
-  // Update shine position
+  // --- Holographic Shimmer ---
+  const holoAngle = 135 + tiltY * 3 + tiltX * 2;
+  const holoIntensity = Math.min(1, (Math.abs(tiltX) + Math.abs(tiltY)) / 10);
+  const holoShimmers = card.querySelectorAll('.holo-shimmer');
+  holoShimmers.forEach((shimmer) => {
+    shimmer.style.setProperty('--holo-angle', holoAngle + 'deg');
+    shimmer.style.backgroundPosition = `${50 + tiltY * 5}% ${50 + tiltX * 5}%`;
+    shimmer.style.opacity = holoIntensity * 0.8;
+  });
+
+  // --- Shine ---
   const shines = card.querySelectorAll('.card-shine');
   shines.forEach((shine) => {
-    const shiftX = tiltY * 3;
-    const shiftY = tiltX * 3;
-    shine.style.transform = `translateX(${shiftX}px) translateY(${shiftY}px)`;
+    shine.style.transform = `translateX(${tiltY * 3}px) translateY(${tiltX * 3}px)`;
   });
 }
 
-animateTilt();
+animateCard();
 
-// --- Flip Card ---
+// ==========================================
+// FLIP CARD
+// ==========================================
 function flipCard() {
   isFlipped = !isFlipped;
+  playSound('whoosh');
 
-  // Hide instruction after first flip
   if (!hasFlippedOnce) {
     hasFlippedOnce = true;
     instruction.classList.add('hidden');
   }
 
-  // Create burst particles
   createFlipBurst();
 }
 
+// Don't flip when clicking interactive elements
 cardContainer.addEventListener('click', (e) => {
-  // Don't flip if clicking interactive elements on the back
-  if (isFlipped) {
-    const target = e.target;
-    if (
-      target.closest('a') ||
-      target.closest('.save-btn') ||
-      target.closest('.share-btn') ||
-      target.closest('.flip-back-btn')
-    ) {
-      return;
-    }
-  }
-  flipCard();
+  // Flip is handled via drag end (short tap)
+  // This is kept for elements that stopPropagation
 });
 
 flipBackBtn.addEventListener('click', (e) => {
@@ -354,7 +586,15 @@ flipBackBtn.addEventListener('click', (e) => {
   if (isFlipped) flipCard();
 });
 
-// --- Flip Burst Particles ---
+// Prevent drag on interactive elements
+document.querySelectorAll('.back-content a, .save-btn, .share-btn, .flip-back-btn').forEach(el => {
+  el.addEventListener('mousedown', (e) => e.stopPropagation());
+  el.addEventListener('touchstart', (e) => e.stopPropagation());
+});
+
+// ==========================================
+// FLIP BURST PARTICLES
+// ==========================================
 function createFlipBurst() {
   const container = document.createElement('div');
   container.className = 'flip-particles';
@@ -364,11 +604,11 @@ function createFlipBurst() {
   const cx = cardRect.left + cardRect.width / 2;
   const cy = cardRect.top + cardRect.height / 2;
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 24; i++) {
     const particle = document.createElement('div');
     particle.className = 'flip-particle';
-    const angle = (Math.PI * 2 * i) / 20;
-    const distance = 60 + Math.random() * 80;
+    const angle = (Math.PI * 2 * i) / 24;
+    const distance = 60 + Math.random() * 100;
     const tx = Math.cos(angle) * distance;
     const ty = Math.sin(angle) * distance;
 
@@ -376,8 +616,7 @@ function createFlipBurst() {
     particle.style.top = cy + 'px';
     particle.style.setProperty('--tx', tx + 'px');
     particle.style.setProperty('--ty', ty + 'px');
-    particle.style.background =
-      Math.random() > 0.5 ? '#d4a574' : '#06b6d4';
+    particle.style.background = Math.random() > 0.5 ? '#d4a574' : '#06b6d4';
     particle.style.animationDelay = Math.random() * 0.1 + 's';
     container.appendChild(particle);
   }
@@ -386,10 +625,36 @@ function createFlipBurst() {
 }
 
 // ==========================================
+// ANIMATED STATS COUNTER
+// ==========================================
+function animateStats() {
+  const statNumbers = document.querySelectorAll('.stat-number');
+  statNumbers.forEach((el) => {
+    const target = parseInt(el.dataset.target);
+    const duration = 1500;
+    const startTime = Date.now();
+
+    function update() {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      el.textContent = Math.round(target * eased);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+
+    update();
+  });
+}
+
+// Trigger stats after intro
+setTimeout(animateStats, 3500);
+
+// ==========================================
 // SAVE CONTACT (vCard)
 // ==========================================
 document.getElementById('saveContact').addEventListener('click', (e) => {
   e.stopPropagation();
+  playSound('click');
 
   const vCardData = `BEGIN:VCARD
 VERSION:3.0
@@ -424,6 +689,7 @@ END:VCARD`;
 // ==========================================
 document.getElementById('shareCard').addEventListener('click', async (e) => {
   e.stopPropagation();
+  playSound('click');
 
   const shareData = {
     title: 'Shaid Hakkeem | S.H.A.A.I Solutions',
@@ -435,12 +701,10 @@ document.getElementById('shareCard').addEventListener('click', async (e) => {
     if (navigator.share) {
       await navigator.share(shareData);
     } else {
-      // Fallback: copy link to clipboard
       await navigator.clipboard.writeText(shareData.url);
       showToast('Link copied!', 'fa-solid fa-link');
     }
-  } catch (err) {
-    // User cancelled or error - copy as fallback
+  } catch {
     try {
       await navigator.clipboard.writeText(shareData.url);
       showToast('Link copied!', 'fa-solid fa-link');
@@ -451,10 +715,9 @@ document.getElementById('shareCard').addEventListener('click', async (e) => {
 });
 
 // ==========================================
-// TOAST NOTIFICATION
+// TOAST
 // ==========================================
 function showToast(message, icon) {
-  // Remove existing toast
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
 
@@ -463,10 +726,7 @@ function showToast(message, icon) {
   toast.innerHTML = `<i class="${icon}"></i> ${message}`;
   document.body.appendChild(toast);
 
-  requestAnimationFrame(() => {
-    toast.classList.add('show');
-  });
-
+  requestAnimationFrame(() => toast.classList.add('show'));
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 400);
@@ -474,16 +734,7 @@ function showToast(message, icon) {
 }
 
 // ==========================================
-// LOADER
-// ==========================================
-window.addEventListener('load', () => {
-  setTimeout(() => {
-    document.getElementById('loader').classList.add('hidden');
-  }, 2000);
-});
-
-// ==========================================
-// KEYBOARD SHORTCUT (for demo/presentation)
+// KEYBOARD SHORTCUTS
 // ==========================================
 document.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
