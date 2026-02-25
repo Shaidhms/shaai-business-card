@@ -112,6 +112,10 @@ setTimeout(() => {
   playSound('intro');
   // Trigger staggered content entrance
   document.querySelector('.card')?.classList.add('entered');
+  // Set explicit opacity so we don't rely on animation fill-mode
+  setTimeout(() => {
+    document.getElementById('cardContainer').style.opacity = '1';
+  }, 1200);
 }, 3200);
 
 // ==========================================
@@ -396,14 +400,13 @@ cardContainer.addEventListener('click', (e) => {
 // TAP RIPPLE EFFECT
 // ==========================================
 function createRipple(e) {
-  const rect = cardContainer.getBoundingClientRect();
   const ripple = document.createElement('div');
   ripple.className = 'tap-ripple';
-  const x = (e.clientX || rect.left + rect.width / 2) - rect.left;
-  const y = (e.clientY || rect.top + rect.height / 2) - rect.top;
+  const x = e.clientX || (window.innerWidth / 2);
+  const y = e.clientY || (window.innerHeight / 2);
   ripple.style.left = x + 'px';
   ripple.style.top = y + 'px';
-  cardContainer.appendChild(ripple);
+  document.body.appendChild(ripple);
   setTimeout(() => ripple.remove(), 700);
 }
 
@@ -448,10 +451,6 @@ if (isMobile && window.DeviceOrientationEvent) {
 function flipCard() {
   isFlipped = !isFlipped;
   playSound('whoosh');
-
-  // Add pulse effect
-  cardContainer.classList.add('flip-pulse');
-  setTimeout(() => cardContainer.classList.remove('flip-pulse'), 400);
 
   if (!hasFlippedOnce) {
     hasFlippedOnce = true;
