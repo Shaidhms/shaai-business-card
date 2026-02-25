@@ -19,8 +19,10 @@ function initAudio() {
 }
 
 function playSound(type) {
-  if (isMuted || !audioCtx) return;
+  if (isMuted) return;
   try {
+    if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     if (type === 'whoosh') playSwoosh();
     else if (type === 'click') playClick();
     else if (type === 'intro') playIntroChord();
@@ -80,9 +82,18 @@ muteBtn.addEventListener('click', (e) => {
   muteIcon.className = isMuted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
 });
 
-// Init audio on first interaction
+// Init audio on first interaction (iOS requires user gesture to unlock AudioContext)
 function firstInteraction() {
-  initAudio();
+  if (!audioCtx) audioCtx = new AudioCtx();
+  // Play silent buffer + resume, then play intro sound after context is running
+  const buf = audioCtx.createBuffer(1, 1, 22050);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
+  src.start(0);
+  audioCtx.resume().then(() => {
+    playSound('intro');
+  });
   document.removeEventListener('touchstart', firstInteraction);
   document.removeEventListener('click', firstInteraction);
 }
@@ -108,8 +119,6 @@ setTimeout(typeIntro, 1000);
 
 setTimeout(() => {
   document.getElementById('cinematicIntro').classList.add('hidden');
-  initAudio();
-  playSound('intro');
   // Trigger staggered content entrance
   document.querySelector('.card')?.classList.add('entered');
   // Set explicit opacity so we don't rely on animation fill-mode
@@ -684,6 +693,7 @@ const chatInput = document.getElementById('chatInput');
 const chatSend = document.getElementById('chatSend');
 const chatSuggestions = document.getElementById('chatSuggestions');
 let chatOpen = false;
+let chatHistory = [];
 
 // Knowledge base
 const faqData = [
@@ -767,10 +777,12 @@ function addMessage(text, sender) {
   msg.className = `chat-msg ${sender}`;
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble';
-  bubble.textContent = text;
+  bubble.innerText = text;
   msg.appendChild(bubble);
   chatMessages.appendChild(msg);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  requestAnimationFrame(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
 }
 
 function addTypingIndicator() {
@@ -779,7 +791,17 @@ function addTypingIndicator() {
   msg.id = 'typingIndicator';
   msg.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
   chatMessages.appendChild(msg);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  requestAnimationFrame(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+
+function scrollChatToBottom() {
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 50);
+  });
 }
 
 function removeTypingIndicator() {
@@ -787,21 +809,55 @@ function removeTypingIndicator() {
   if (el) el.remove();
 }
 
-function handleUserMessage(text) {
+async function handleUserMessage(text) {
   if (!text.trim()) return;
   addMessage(text, 'user');
   chatInput.value = '';
   chatSuggestions.style.display = 'none';
   playSound('click');
 
+  chatInput.disabled = true;
+  chatSend.disabled = true;
   addTypingIndicator();
-  const delay = 400 + Math.random() * 600;
-  setTimeout(() => {
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history: chatHistory
+      })
+    });
+
+    removeTypingIndicator();
+
+    if (!response.ok) throw new Error('API error');
+
+    const data = await response.json();
+
+    if (data.reply) {
+      addMessage(data.reply, 'bot');
+      scrollChatToBottom();
+      chatHistory.push({ role: 'user', content: text });
+      chatHistory.push({ role: 'assistant', content: data.reply });
+      if (chatHistory.length > 20) {
+        chatHistory = chatHistory.slice(-20);
+      }
+    } else {
+      throw new Error('No reply');
+    }
+  } catch (err) {
     removeTypingIndicator();
     const answer = findAnswer(text);
     addMessage(answer, 'bot');
-    playSound('click');
-  }, delay);
+    scrollChatToBottom();
+  }
+
+  chatInput.disabled = false;
+  chatSend.disabled = false;
+  chatInput.focus();
+  playSound('click');
 }
 
 // Toggle chat
@@ -894,6 +950,7 @@ const successDoneBtn = document.getElementById('successDoneBtn');
 const camFloatBubble = document.getElementById('camFloatBubble');
 let camStream = null;
 let photoDataUrl = null;
+let rawPhotoDataUrl = null;
 
 function openConnect() {
   connectOverlay.classList.add('open');
@@ -915,6 +972,14 @@ quickConnectBtn.addEventListener('click', (e) => {
   openConnect();
 });
 
+// Auto-open Snap & Connect if linked from AR page with ?snap=1
+if (new URLSearchParams(window.location.search).get('snap') === '1') {
+  setTimeout(() => {
+    document.getElementById('cinematicIntro').classList.add('hidden');
+    openConnect();
+  }, 500);
+}
+
 // Close overlay
 connectCloseBtn.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -933,18 +998,40 @@ function closeConnect() {
 }
 
 // Camera
-async function startCamera() {
-  try {
-    camStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 300 }, height: { ideal: 300 } }
-    });
-    camFeed.srcObject = camStream;
-    camFeed.style.display = 'block';
-    camPlaceholder.style.display = 'none';
-  } catch (err) {
+async function startCamera(retryCount) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     camPlaceholder.style.display = 'flex';
     camFeed.style.display = 'none';
+    return;
   }
+
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user' }
+    });
+  } catch (err) {
+    // NotReadableError = camera in use by another tab (e.g. AR page)
+    // Retry after a short delay to let the other tab release it
+    if (err.name === 'NotReadableError' && (!retryCount || retryCount < 3)) {
+      await new Promise(r => setTimeout(r, 500));
+      return startCamera((retryCount || 0) + 1);
+    }
+    // Fallback: try without facingMode constraint
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch (e2) {
+      camPlaceholder.style.display = 'flex';
+      camFeed.style.display = 'none';
+      return;
+    }
+  }
+
+  camFeed.srcObject = camStream;
+  camFeed.setAttribute('playsinline', '');
+  camFeed.muted = true;
+  try { await camFeed.play(); } catch (e) { /* autoplay handles it */ }
+  camFeed.style.display = 'block';
+  camPlaceholder.style.display = 'none';
 }
 
 function stopCamera() {
@@ -965,6 +1052,18 @@ camSnapBtn.addEventListener('click', (e) => {
   playSound('click');
 
   if (camStream) {
+    // Capture raw photo (no frame) for email inline embed
+    const rawW = 600;
+    const rawH = Math.round(rawW * (camFeed.videoHeight / camFeed.videoWidth));
+    const rawCanvas = document.createElement('canvas');
+    rawCanvas.width = rawW;
+    rawCanvas.height = rawH;
+    const rawCtx = rawCanvas.getContext('2d');
+    rawCtx.translate(rawW, 0);
+    rawCtx.scale(-1, 1);
+    rawCtx.drawImage(camFeed, 0, 0, rawW, rawH);
+    rawPhotoDataUrl = rawCanvas.toDataURL('image/jpeg', 0.85);
+
     const W = 600;
     const H = 720;
     const border = 14;
@@ -1021,25 +1120,21 @@ camSnapBtn.addEventListener('click', (e) => {
     ctx.fillStyle = '#f5f3f0';
     ctx.fillRect(border, botY, W - border * 2, bottomBar);
 
-    // "New connection via" label
-    ctx.font = '600 11px "Inter", sans-serif';
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    // Person's name (placeholder for preview — re-drawn at submit with actual name)
+    ctx.font = 'bold 22px "Playfair Display", serif';
+    ctx.fillStyle = '#1a1a2e';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.letterSpacing = '2px';
-    ctx.fillText('NEW CONNECTION VIA', W / 2, botY + 8);
+    ctx.fillText('GFF 2026', W / 2, botY + 10);
 
-    // Name
-    ctx.font = 'bold 20px "Playfair Display", serif';
-    ctx.fillStyle = '#1a1a2e';
-    ctx.textBaseline = 'top';
-    ctx.fillText('SHAID HAKKEEM', W / 2, botY + 23);
-
-    // Contact line
+    // Built by line
     ctx.font = '500 12px "Inter", sans-serif';
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.textBaseline = 'top';
-    ctx.fillText('+91 63802 57066  •  shaid360.com', W / 2, botY + 50);
+    ctx.fillText('Built by Shaid  •  Freelancer  •  shaid360.com', W / 2, botY + 42);
+
+    // Store frame dimensions for re-draw at submit
+    window._frameInfo = { W, H, border, topBar, bottomBar };
 
     // Date in small text bottom-right
     const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -1058,7 +1153,7 @@ camSnapBtn.addEventListener('click', (e) => {
     ctx.beginPath(); ctx.moveTo(o, H - o - c); ctx.lineTo(o, H - o); ctx.lineTo(o + c, H - o); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(W - o - c, H - o); ctx.lineTo(W - o, H - o); ctx.lineTo(W - o, H - o - c); ctx.stroke();
 
-    photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.9);
+    photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.6);
     camPhoto.src = photoDataUrl;
     camPhoto.style.display = 'block';
     camFeed.style.display = 'none';
@@ -1185,6 +1280,7 @@ camRetakeBtn.addEventListener('click', (e) => {
   camRetakeBtn.style.display = 'none';
   camSnapBtn.style.display = 'flex';
   photoDataUrl = null;
+  rawPhotoDataUrl = null;
   startCamera();
 });
 
@@ -1224,21 +1320,89 @@ connectSubmitBtn.addEventListener('click', (e) => {
   });
   localStorage.setItem('gff_connections', JSON.stringify(connections));
 
-  // Send email via Resend API
-  fetch('/api/send-email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name,
-      phone: phone || 'Not provided',
-      email: email || 'Not provided',
-      role: role || 'Not provided',
-      photo: photoDataUrl || 'No photo taken',
-      date: connectionDate,
-      event: 'Global Freelancers Festival 2026',
-      venue: 'IIT Madras Research Park, Chennai',
-    }),
-  }).catch(() => null).then(() => {
+  // Compress photos for email
+  function compressPhoto(dataUrl, maxWidth) {
+    return new Promise((resolve) => {
+      if (!dataUrl) { resolve(null); return; }
+      try {
+        const img = new Image();
+        img.onload = () => {
+          const c = document.createElement('canvas');
+          const scale = maxWidth / img.width;
+          c.width = maxWidth;
+          c.height = img.height * scale;
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.82));
+        };
+        img.onerror = () => resolve(null);
+        img.src = dataUrl;
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  // Re-draw framed photo bottom bar with person's name
+  if (photoDataUrl && window._frameInfo) {
+    const fi = window._frameInfo;
+    const ctx = camCanvas.getContext('2d');
+    const botY = fi.H - fi.border - fi.bottomBar;
+    // Clear bottom bar and redraw
+    ctx.fillStyle = '#f5f3f0';
+    ctx.fillRect(fi.border, botY, fi.W - fi.border * 2, fi.bottomBar);
+    // Person's name
+    ctx.font = 'bold 20px "Playfair Display", serif';
+    ctx.fillStyle = '#1a1a2e';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(name.toUpperCase(), fi.W / 2, botY + 10);
+    // Built by line
+    ctx.font = '500 12px "Inter", sans-serif';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Built by Shaid  \u2022  Freelancer  \u2022  shaid360.com', fi.W / 2, botY + 38);
+    // Date
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(dateStr, fi.W - fi.border - 10, fi.H - fi.border - 6);
+    // Update photoDataUrl with the name
+    photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.6);
+  }
+
+  // Compress both: raw photo (inline in email) + framed photo (attachment)
+  Promise.all([
+    compressPhoto(rawPhotoDataUrl, 500),
+    compressPhoto(photoDataUrl, 600),
+  ]).then(([inlinePhoto, framedPhoto]) => {
+    // Send email via Resend API
+    fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        phone: phone || 'Not provided',
+        email: email || 'Not provided',
+        role: role || 'Not provided',
+        photo: inlinePhoto,
+        framedPhoto: framedPhoto,
+        date: connectionDate,
+        event: 'Global Freelancers Festival 2026',
+        venue: 'IIT Madras Research Park, Chennai',
+      }),
+    }).then(r => r.json()).then(d => {
+      if (d.error) console.warn('Email API error:', d.error);
+      else {
+        console.log('Notify email:', d.notifyId);
+        console.log('Thank-you email:', d.thankYouId || 'not sent');
+        if (d.thankYouError) console.warn('Thank-you email error:', d.thankYouError);
+        console.log('Email used for thank-you:', d.emailUsed);
+      }
+    }).catch(err => console.warn('Email fetch error:', err));
+  });
+
+  // Show success immediately (don't wait for email)
+  setTimeout(() => {
     // Hide form, show success
     document.getElementById('connectGffLogo').style.display = 'none';
     document.getElementById('connectTitle').style.display = 'none';
@@ -1262,7 +1426,7 @@ connectSubmitBtn.addEventListener('click', (e) => {
     // Restore button for next use
     connectSubmitBtn.innerHTML = origBtnHTML;
     connectSubmitBtn.disabled = false;
-  });
+  }, 500);
 });
 
 // Done
@@ -1277,6 +1441,7 @@ function resetConnectForm() {
   connectEmailInput.value = '';
   connectRoleInput.value = '';
   photoDataUrl = null;
+  rawPhotoDataUrl = null;
   camPhoto.style.display = 'none';
   camRetakeBtn.style.display = 'none';
   camSnapBtn.style.display = 'flex';

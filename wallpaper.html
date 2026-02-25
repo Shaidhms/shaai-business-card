@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan to Connect - Shaid Hakkeem</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; font-family: 'Inter', sans-serif; }
+    canvas { border-radius: 16px; max-width: 100%; height: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .actions { display: flex; gap: 16px; margin-top: 28px; }
+    .save-btn {
+      background: linear-gradient(135deg, #FF6B35, #e55a2b);
+      color: #fff;
+      border: none;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: transform 0.2s;
+    }
+    .save-btn:hover { transform: scale(1.04); }
+    .save-btn.alt { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); }
+    .save-btn.alt:hover { background: rgba(255,255,255,0.12); }
+    .info { color: rgba(255,255,255,0.25); font-size: 12px; margin-top: 14px; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+
+<canvas id="wallpaper" width="1170" height="2532"></canvas>
+<div class="actions">
+  <button class="save-btn" onclick="saveWallpaper()">Save Wallpaper</button>
+</div>
+<div class="info">1170 x 2532 &mdash; iPhone Pro Max</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+const W = 1170, H = 2532;
+const canvas = document.getElementById('wallpaper');
+const ctx = canvas.getContext('2d');
+
+const photo = new Image();
+const gffLogo = new Image();
+let loaded = 0;
+function onAssetLoad() {
+  loaded++;
+  if (loaded >= 2) draw();
+}
+photo.onload = photo.onerror = onAssetLoad;
+gffLogo.onload = gffLogo.onerror = onAssetLoad;
+photo.src = 'photo.jpg';
+gffLogo.src = 'gff-logo.png';
+
+function draw() {
+  // ===== DEEP DARK BACKGROUND =====
+  const bg = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  bg.addColorStop(0, '#050508');
+  bg.addColorStop(0.3, '#0a0c14');
+  bg.addColorStop(0.6, '#080a12');
+  bg.addColorStop(1, '#050508');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Ambient teal glow top
+  radialGlow(W * 0.3, H * 0.12, 500, 'rgba(13,148,136,0.06)');
+  // Ambient orange glow center
+  radialGlow(W * 0.7, H * 0.42, 600, 'rgba(255,107,53,0.04)');
+  // Ambient teal glow bottom
+  radialGlow(W * 0.5, H * 0.82, 400, 'rgba(13,148,136,0.04)');
+
+  // Subtle grid pattern
+  ctx.strokeStyle = 'rgba(255,255,255,0.015)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < W; i += 60) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke();
+  }
+  for (let i = 0; i < H; i += 60) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke();
+  }
+
+  // Decorative diagonal lines
+  ctx.save();
+  ctx.globalAlpha = 0.03;
+  ctx.strokeStyle = '#FF6B35';
+  ctx.lineWidth = 1;
+  for (let i = -H; i < W + H; i += 120) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H * 0.4, H); ctx.stroke();
+  }
+  ctx.restore();
+
+  let y = 200;
+
+  // ===== GFF LOGO at top =====
+  if (gffLogo.complete && gffLogo.naturalWidth > 0) {
+    const logoH = 90;
+    const logoW = (gffLogo.naturalWidth / gffLogo.naturalHeight) * logoH;
+    ctx.save();
+    ctx.globalAlpha = 0.6;
+    ctx.drawImage(gffLogo, (W - logoW) / 2, y, logoW, logoH);
+    ctx.restore();
+    y += logoH + 50;
+  } else {
+    // Fallback text
+    ctx.textAlign = 'center';
+    ctx.font = '700 28px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillText('GFF 2026', W/2, y + 30);
+    y += 80;
+  }
+
+  // ===== EVENT BADGE =====
+  const badgeW = 380, badgeH = 48;
+  const badgeX = (W - badgeW) / 2;
+  ctx.fillStyle = 'rgba(13,148,136,0.1)';
+  roundRect(ctx, badgeX, y, badgeW, badgeH, 24);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(13,148,136,0.25)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, badgeX, y, badgeW, badgeH, 24);
+  ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.font = '600 14px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(13,148,136,0.9)';
+  ctx.fillText('IIT MADRAS RESEARCH PARK  \u2022  FEB 28, 2026', W/2, y + 30);
+  y += badgeH + 70;
+
+  // ===== PHOTO =====
+  if (photo.complete && photo.naturalWidth > 0) {
+    const r = 100;
+    ctx.save();
+    // Glow rings
+    for (let i = 3; i >= 1; i--) {
+      ctx.beginPath();
+      ctx.arc(W/2, y + r, r + i * 12, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,107,53,${0.04 * i})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    // Clip circle
+    ctx.beginPath();
+    ctx.arc(W/2, y + r, r, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    const imgSize = Math.min(photo.naturalWidth, photo.naturalHeight);
+    const sx = (photo.naturalWidth - imgSize) / 2;
+    const sy = (photo.naturalHeight - imgSize) / 2;
+    ctx.drawImage(photo, sx, sy, imgSize, imgSize, W/2 - r, y, r*2, r*2);
+    ctx.restore();
+    // Orange ring
+    ctx.beginPath();
+    ctx.arc(W/2, y + r, r + 3, 0, Math.PI * 2);
+    const ringGrad = ctx.createLinearGradient(W/2 - r, y, W/2 + r, y + r*2);
+    ringGrad.addColorStop(0, '#FF6B35');
+    ringGrad.addColorStop(1, '#0D9488');
+    ctx.strokeStyle = ringGrad;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    y += r * 2 + 50;
+  }
+
+  // ===== NAME =====
+  ctx.textAlign = 'center';
+  ctx.font = '300 22px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillText('MUHIBBUDDIN', W/2, y);
+  y += 60;
+
+  ctx.font = '900 84px "Playfair Display", serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('SHAID', W/2, y);
+  y += 30;
+
+  // Name underline accent
+  const lineGrad = ctx.createLinearGradient(W/2 - 80, 0, W/2 + 80, 0);
+  lineGrad.addColorStop(0, 'transparent');
+  lineGrad.addColorStop(0.2, '#FF6B35');
+  lineGrad.addColorStop(0.8, '#0D9488');
+  lineGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = lineGrad;
+  ctx.fillRect(W/2 - 80, y, 160, 3);
+  y += 40;
+
+  // ===== ROLE TAGS =====
+  const tags = ['Web Dev', 'Gen AI', 'Automation'];
+  const tagW = 150, tagH = 42, tagGap = 16;
+  const totalTagW = tags.length * tagW + (tags.length - 1) * tagGap;
+  let tagX = (W - totalTagW) / 2;
+  tags.forEach((tag, i) => {
+    const colors = ['rgba(255,107,53,0.12)', 'rgba(13,148,136,0.12)', 'rgba(147,51,234,0.12)'];
+    const borders = ['rgba(255,107,53,0.3)', 'rgba(13,148,136,0.3)', 'rgba(147,51,234,0.3)'];
+    const textColors = ['rgba(255,107,53,0.9)', 'rgba(13,148,136,0.9)', 'rgba(147,51,234,0.9)'];
+    ctx.fillStyle = colors[i];
+    roundRect(ctx, tagX, y, tagW, tagH, 21);
+    ctx.fill();
+    ctx.strokeStyle = borders[i];
+    ctx.lineWidth = 1;
+    roundRect(ctx, tagX, y, tagW, tagH, 21);
+    ctx.stroke();
+    ctx.textAlign = 'center';
+    ctx.font = '600 14px Inter, sans-serif';
+    ctx.fillStyle = textColors[i];
+    ctx.fillText(tag, tagX + tagW/2, y + 27);
+    tagX += tagW + tagGap;
+  });
+  y += tagH + 70;
+
+  // ===== QR SECTION =====
+  // Outer glass card
+  const cardW = 460, cardH = 500;
+  const cardX = (W - cardW) / 2;
+  const cardY = y;
+
+  // Card glow behind
+  radialGlow(W/2, cardY + cardH/2, 320, 'rgba(255,107,53,0.05)');
+
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  roundRect(ctx, cardX, cardY, cardW, cardH, 40);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 40);
+  ctx.stroke();
+
+  // "SCAN ME" label above QR
+  ctx.textAlign = 'center';
+  ctx.font = '800 16px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.letterSpacing = '6px';
+  ctx.fillText('SCAN  TO  CONNECT', W/2, cardY + 44);
+
+  // QR code
+  const qrSize = 310;
+  const qrPad = 28;
+  const qrBgX = (W - qrSize - qrPad * 2) / 2;
+  const qrBgY = cardY + 66;
+
+  // White rounded QR background
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, qrBgX, qrBgY, qrSize + qrPad * 2, qrSize + qrPad * 2, 28);
+  ctx.fill();
+
+  // Shadow for QR card
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.15)';
+  ctx.shadowBlur = 30;
+  ctx.shadowOffsetY = 8;
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, qrBgX, qrBgY, qrSize + qrPad * 2, qrSize + qrPad * 2, 28);
+  ctx.fill();
+  ctx.restore();
+
+  // Generate & draw QR
+  var qr = qrcode(0, 'H');
+  qr.addData('https://me.shaid360.com');
+  qr.make();
+  var moduleCount = qr.getModuleCount();
+  var cellSize = qrSize / moduleCount;
+  var qrStartX = qrBgX + qrPad;
+  var qrStartY = qrBgY + qrPad;
+
+  // Draw QR modules with rounded style
+  for (var row = 0; row < moduleCount; row++) {
+    for (var col = 0; col < moduleCount; col++) {
+      if (qr.isDark(row, col)) {
+        var mx = qrStartX + col * cellSize;
+        var my = qrStartY + row * cellSize;
+        var ms = cellSize + 0.5;
+        var mr = cellSize * 0.15;
+        ctx.fillStyle = '#1a1a1a';
+        roundRect(ctx, mx, my, ms, ms, mr);
+        ctx.fill();
+      }
+    }
+  }
+
+  // URL below QR
+  var urlY = qrBgY + qrSize + qrPad * 2 + 40;
+  ctx.textAlign = 'center';
+  ctx.font = '600 18px Inter, sans-serif';
+  ctx.fillStyle = '#0D9488';
+  ctx.fillText('me.shaid360.com', W/2, urlY);
+
+  y = cardY + cardH + 70;
+
+  // ===== BOTTOM CTA =====
+  ctx.textAlign = 'center';
+  ctx.font = '300 24px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.fillText("Let's build something", W/2, y);
+  y += 44;
+  ctx.font = '800 32px Inter, sans-serif';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText('together.', W/2, y);
+  y += 60;
+
+  // Contact pills
+  const contacts = [
+    { icon: '\u2709', text: 'mail2shaid@gmail.com' },
+    { icon: '\u260E', text: '+91 63802 57066' }
+  ];
+  contacts.forEach((c) => {
+    ctx.font = '400 16px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillText(c.icon + '  ' + c.text, W/2, y);
+    y += 32;
+  });
+
+  y += 40;
+
+  // Bottom accent line
+  const btmGrad = ctx.createLinearGradient(W/2 - 50, 0, W/2 + 50, 0);
+  btmGrad.addColorStop(0, 'transparent');
+  btmGrad.addColorStop(0.5, 'rgba(255,107,53,0.4)');
+  btmGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = btmGrad;
+  ctx.fillRect(W/2 - 50, y, 100, 2);
+  y += 30;
+
+  // Footer
+  ctx.font = '500 12px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.fillText('TURNING  IDEAS  INTO  REALITY', W/2, y);
+}
+
+function radialGlow(x, y, r, color) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, color);
+  g.addColorStop(1, 'transparent');
+  ctx.fillStyle = g;
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function saveWallpaper() {
+  var link = document.createElement('a');
+  link.download = 'shaid-connect-wallpaper.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <meta name="theme-color" content="#06060e">
+  <title>AR Experience | Shaid Hakkeem</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="ar.css">
+</head>
+<body>
+
+  <!-- Start Screen (hidden — AR auto-launches) -->
+  <div id="start-screen" class="hidden">
+    <div class="start-content">
+      <div class="ar-icon">
+        <i class="fas fa-cube"></i>
+      </div>
+      <h1>AR Experience</h1>
+      <p class="start-subtitle">SHAID HAKKEEM</p>
+      <p class="start-desc">Launch to see a 3D hologram on your camera</p>
+      <button id="start-btn">
+        <i class="fas fa-camera"></i>
+        Launch AR
+      </button>
+      <p class="start-hint">Requires camera access</p>
+    </div>
+  </div>
+
+  <!-- Camera background -->
+  <video id="camera-feed" autoplay playsinline muted></video>
+
+  <!-- Three.js canvas -->
+  <canvas id="ar-canvas"></canvas>
+
+  <!-- AR UI Overlay -->
+  <div id="ar-ui" class="hidden">
+    <!-- Top Bar -->
+    <div class="ar-top-bar">
+      <a href="index.html" class="ar-back-btn">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <div class="ar-status" id="ar-status">
+        <span class="status-dot found"></span>
+        <span class="status-text">AR Active</span>
+      </div>
+    </div>
+
+    <!-- Bottom hotspot buttons -->
+    <div class="ar-bottom-bar" id="ar-hotspots">
+      <a href="https://wa.me/916380257066?text=Hey%20Shaid!%20Just%20saw%20your%20AR%20card%20%F0%9F%94%A5" target="_blank" class="hotspot-btn whatsapp">
+        <i class="fab fa-whatsapp"></i>
+        <span>WhatsApp</span>
+      </a>
+      <a href="./index.html" target="_blank" class="hotspot-btn contact-card">
+        <i class="fas fa-address-card"></i>
+        <span>Contact Card</span>
+      </a>
+      <a href="./index.html?snap=1" target="_blank" class="hotspot-btn snap-link">
+        <i class="fas fa-camera"></i>
+        <span>Snap & Link</span>
+      </a>
+      <button id="gyro-btn" class="hotspot-btn gyro-btn">
+        <i class="fas fa-compass"></i>
+        <span>Motion</span>
+        <div class="gyro-hint" id="gyro-hint">
+          <span>Tilt phone to move hologram</span>
+          <div class="gyro-hint-arrow"></div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading overlay (visible by default while camera starts) -->
+  <div id="ar-loading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p>Starting camera...</p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="ar.js"></script>
+</body>
+</html>

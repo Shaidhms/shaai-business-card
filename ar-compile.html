@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compile AR Target</title>
+  <style>
+    body {
+      margin: 0;
+      background: #06060e;
+      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 2rem;
+    }
+    .container { max-width: 500px; }
+    h1 { color: #d4a574; margin-bottom: 0.5rem; }
+    p { color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    #status { color: #06b6d4; margin: 1rem 0; min-height: 1.5rem; }
+    #progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(212,165,116,0.15);
+      border-radius: 3px;
+      margin: 1rem 0;
+      overflow: hidden;
+      display: none;
+    }
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #d4a574, #fbbf24);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    button {
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #06060e;
+      background: linear-gradient(135deg, #d4a574, #fbbf24);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      margin: 0.5rem;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    img { max-width: 200px; border-radius: 12px; margin: 1rem 0; border: 1px solid rgba(212,165,116,0.2); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AR Target Compiler</h1>
+    <p>This compiles your wallpaper image into a <code>.mind</code> file for AR tracking.</p>
+
+    <button id="compile-btn" onclick="compileTarget()">Compile iphone.png</button>
+
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <div id="status"></div>
+    <div id="preview"></div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "mind-ar/image": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"
+    }
+  }
+  </script>
+  <script type="module">
+    import { Compiler } from 'mind-ar/image';
+
+    document.getElementById('compile-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('compile-btn');
+      const status = document.getElementById('status');
+      const progressBar = document.getElementById('progress-bar');
+      const progressFill = document.getElementById('progress-fill');
+      const preview = document.getElementById('preview');
+
+      btn.disabled = true;
+      progressBar.style.display = 'block';
+      status.textContent = 'Loading image...';
+
+      try {
+        // Load the wallpaper image
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = './iphone.png';
+        });
+
+        preview.innerHTML = '';
+        const previewImg = img.cloneNode();
+        preview.appendChild(previewImg);
+
+        status.textContent = 'Compiling target (this may take 30-60s)...';
+
+        // Compile using MindAR's compiler
+        const compiler = new Compiler();
+
+        const dataList = await compiler.compileImageTargets([img], (progress) => {
+          const pct = Math.round(progress * 100);
+          progressFill.style.width = pct + '%';
+          status.textContent = `Compiling... ${pct}%`;
+        });
+
+        status.textContent = 'Exporting .mind file...';
+        progressFill.style.width = '100%';
+
+        const exportedBuffer = await compiler.exportData();
+
+        // Download the .mind file
+        const blob = new Blob([exportedBuffer]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ar-target.mind';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        status.textContent = 'Done! ar-target.mind downloaded. Move it to your project folder.';
+        btn.disabled = false;
+        btn.textContent = 'Re-compile';
+
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Error: ' + err.message;
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
