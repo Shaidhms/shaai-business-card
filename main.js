@@ -570,6 +570,29 @@ function typeBio() {
 setTimeout(typeBio, 4200);
 
 // ==========================================
+// PROJECTS AUTO-SCROLL (uses scrollLeft, not transform)
+// ==========================================
+(function() {
+  const scrollEl = document.querySelector('.projects-scroll');
+  if (!scrollEl) return;
+  let scrollDir = 1;
+  let userTouching = false;
+  let resumeTimeout = null;
+
+  scrollEl.addEventListener('touchstart', () => { userTouching = true; clearTimeout(resumeTimeout); }, { passive: true });
+  scrollEl.addEventListener('touchend', () => { resumeTimeout = setTimeout(() => { userTouching = false; }, 3000); }, { passive: true });
+
+  setInterval(() => {
+    if (userTouching) return;
+    const maxScroll = scrollEl.scrollWidth - scrollEl.clientWidth;
+    if (maxScroll <= 0) return;
+    scrollEl.scrollLeft += scrollDir * 1;
+    if (scrollEl.scrollLeft >= maxScroll) scrollDir = -1;
+    if (scrollEl.scrollLeft <= 0) scrollDir = 1;
+  }, 30);
+})();
+
+// ==========================================
 // SAVE CONTACT (vCard)
 // ==========================================
 document.getElementById('saveContact').addEventListener('click', (e) => {
