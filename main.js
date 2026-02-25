@@ -966,21 +966,89 @@ function stopCamera() {
   camFeed.srcObject = null;
 }
 
-// Snap photo
+// Snap photo with GFF frame overlay
 camSnapBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   playSound('click');
 
   if (camStream) {
+    const size = 600;
+    const border = 18;
+    const topBar = 52;
+    const bottomBar = 44;
     const ctx = camCanvas.getContext('2d');
-    camCanvas.width = 300;
-    camCanvas.height = 300;
-    // Mirror the image to match the mirrored video preview
-    ctx.translate(300, 0);
+    camCanvas.width = size;
+    camCanvas.height = size;
+
+    // --- Draw frame background ---
+    // Outer border gradient
+    const borderGrad = ctx.createLinearGradient(0, 0, size, size);
+    borderGrad.addColorStop(0, '#d4a574');
+    borderGrad.addColorStop(0.5, '#06b6d4');
+    borderGrad.addColorStop(1, '#d4a574');
+    ctx.fillStyle = borderGrad;
+    ctx.fillRect(0, 0, size, size);
+
+    // Inner dark fill
+    ctx.fillStyle = '#0d0d1a';
+    ctx.fillRect(border, border, size - border * 2, size - border * 2);
+
+    // --- Draw mirrored photo in center ---
+    const photoY = border + topBar;
+    const photoH = size - border * 2 - topBar - bottomBar;
+    ctx.save();
+    ctx.translate(size, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(camFeed, 0, 0, 300, 300);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.85);
+    ctx.drawImage(camFeed, size - border - (size - border * 2), photoY, size - border * 2, photoH);
+    ctx.restore();
+
+    // --- Top bar: GFF 2026 branding ---
+    ctx.fillStyle = 'rgba(13, 13, 26, 0.85)';
+    ctx.fillRect(border, border, size - border * 2, topBar);
+
+    // GFF text
+    ctx.font = 'bold 18px "Playfair Display", serif';
+    ctx.fillStyle = '#d4a574';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('GLOBAL FREELANCERS FESTIVAL', size / 2, border + topBar / 2 - 6);
+
+    // Subtitle
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#06b6d4';
+    ctx.fillText('IIT Madras Research Park, Chennai', size / 2, border + topBar / 2 + 12);
+
+    // --- Bottom bar: date + branding ---
+    const botY = size - border - bottomBar;
+    ctx.fillStyle = 'rgba(13, 13, 26, 0.85)';
+    ctx.fillRect(border, botY, size - border * 2, bottomBar);
+
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(dateStr, border + 14, botY + bottomBar / 2);
+
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.fillStyle = '#d4a574';
+    ctx.textAlign = 'right';
+    ctx.fillText('GFF 2026', size - border - 14, botY + bottomBar / 2);
+
+    // --- Corner accents ---
+    ctx.strokeStyle = '#d4a574';
+    ctx.lineWidth = 2;
+    const c = 20; const o = border + 4;
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(o, o + c); ctx.lineTo(o, o); ctx.lineTo(o + c, o); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(size - o - c, o); ctx.lineTo(size - o, o); ctx.lineTo(size - o, o + c); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(o, size - o - c); ctx.lineTo(o, size - o); ctx.lineTo(o + c, size - o); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(size - o - c, size - o); ctx.lineTo(size - o, size - o); ctx.lineTo(size - o, size - o - c); ctx.stroke();
+
+    photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.9);
     camPhoto.src = photoDataUrl;
     camPhoto.style.display = 'block';
     camFeed.style.display = 'none';
