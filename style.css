@@ -1903,6 +1903,103 @@ html, body {
   }
 }
 
+/* Photo Preview Overlay */
+.photo-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.photo-preview-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.photo-preview-overlay .preview-photo {
+  max-width: 88vw;
+  max-height: 65vh;
+  border-radius: 12px;
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(212, 165, 116, 0.1);
+  transform: scale(0.9);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.photo-preview-overlay.open .preview-photo {
+  transform: scale(1);
+}
+
+.preview-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.preview-close-btn:active {
+  transform: scale(0.9);
+}
+
+.preview-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--gold), #c4915a);
+  box-shadow: 0 4px 20px rgba(212, 165, 116, 0.3);
+  transition: all 0.3s ease;
+}
+
+.preview-download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(212, 165, 116, 0.4);
+}
+
+.preview-download-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
+}
+
+.preview-download-btn i {
+  font-size: 1rem;
+}
+
+/* Tappable hint on captured photo */
+.connect-cam-wrap .connect-cam-photo[style*="block"] {
+  cursor: pointer;
+}
+
 /* Form Fields */
 .connect-fields {
   display: flex;

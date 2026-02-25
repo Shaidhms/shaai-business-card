@@ -1064,6 +1064,46 @@ camSnapBtn.addEventListener('click', (e) => {
   setTimeout(() => { wrap.style.boxShadow = ''; }, 400);
 });
 
+// Photo preview — tap captured photo to view full frame + download
+const photoPreviewOverlay = document.getElementById('photoPreviewOverlay');
+const previewPhoto = document.getElementById('previewPhoto');
+const previewCloseBtn = document.getElementById('previewCloseBtn');
+const previewDownloadBtn = document.getElementById('previewDownloadBtn');
+
+camPhoto.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!photoDataUrl) return;
+  previewPhoto.src = photoDataUrl;
+  photoPreviewOverlay.classList.add('open');
+});
+
+previewCloseBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  photoPreviewOverlay.classList.remove('open');
+});
+
+photoPreviewOverlay.addEventListener('click', (e) => {
+  if (e.target === photoPreviewOverlay) photoPreviewOverlay.classList.remove('open');
+});
+
+previewDownloadBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (!photoDataUrl) return;
+  const link = document.createElement('a');
+  link.href = photoDataUrl;
+  const ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+  link.download = `GFF2026-${ts}.jpg`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Feedback
+  previewDownloadBtn.innerHTML = '<i class="fa-solid fa-check"></i> Saved!';
+  setTimeout(() => {
+    previewDownloadBtn.innerHTML = '<i class="fa-solid fa-download"></i> Save to Gallery';
+  }, 2000);
+});
+
 // Floating bubble — draggable + triggers snap
 (function() {
   let isDragging = false;
