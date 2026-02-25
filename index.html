@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Shaid Hakkeem | S.H.A.A.I Solutions</title>
+  <meta name="description" content="Muhibbuddin Shaid Hakkeem - Freelancing, Web Development & Digital Solutions. Turning Ideas Into Reality.">
+  <meta name="theme-color" content="#06060e">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Shaid Hakkeem | S.H.A.A.I Solutions">
+  <meta property="og:description" content="Freelancing, Web Development & Digital Solutions - Turning Ideas Into Reality">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.shaid360.com">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div class="loader" id="loader">
+    <div class="loader-content">
+      <div class="loader-logo">S.H.A.A.I</div>
+      <div class="loader-bar"><div class="loader-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- Three.js Background Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Ambient Glow -->
+  <div class="ambient-glow"></div>
+
+  <!-- Card Instruction -->
+  <div class="instruction" id="instruction">
+    <i class="fa-solid fa-hand-pointer"></i> Tap the card to flip
+  </div>
+
+  <!-- Main Card Container -->
+  <div class="card-wrapper">
+    <div class="card-container" id="cardContainer">
+      <div class="card" id="card">
+
+        <!-- ===== FRONT FACE ===== -->
+        <div class="card-face card-front">
+          <div class="card-shine"></div>
+          <div class="card-border-glow"></div>
+
+          <div class="front-content">
+            <!-- Brand Header -->
+            <div class="brand">
+              <div class="brand-icon">
+                <i class="fa-solid fa-diamond"></i>
+              </div>
+              <div class="brand-name">S.H.A.A.I</div>
+              <div class="brand-sub">SOLUTIONS</div>
+            </div>
+
+            <!-- Photo -->
+            <div class="photo-container">
+              <div class="photo-glow"></div>
+              <div class="photo-ring"></div>
+              <img src="photo.jpg" alt="Shaid Hakkeem" class="photo" />
+            </div>
+
+            <!-- Name -->
+            <div class="name-section">
+              <h1 class="first-name">MUHIBBUDDIN</h1>
+              <h1 class="last-name">SHAID HAKKEEM</h1>
+            </div>
+
+            <!-- Tagline -->
+            <div class="tagline">
+              <p class="tagline-main">Web Development & Digital Solutions</p>
+              <p class="tagline-sub">Turning Ideas Into Reality</p>
+            </div>
+
+            <!-- Bottom -->
+            <div class="front-footer">
+              <div class="website-badge">
+                <i class="fa-solid fa-globe"></i>
+                <span>shaid360.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== BACK FACE ===== -->
+        <div class="card-face card-back">
+          <div class="card-shine"></div>
+          <div class="card-border-glow"></div>
+
+          <div class="back-content">
+            <!-- Header -->
+            <div class="back-header">
+              <div class="back-brand">S.H.A.A.I</div>
+              <button class="flip-back-btn" id="flipBackBtn">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="contact-section">
+              <div class="contact-item">
+                <i class="fa-solid fa-phone"></i>
+                <a href="tel:+916380257066">+91 63802 57066</a>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-envelope"></i>
+                <a href="mailto:mail2shaid@gmail.com">mail2shaid@gmail.com</a>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-globe"></i>
+                <a href="https://www.shaid360.com" target="_blank">www.shaid360.com</a>
+              </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="achievements-section">
+              <div class="section-title">
+                <i class="fa-solid fa-trophy"></i> Achievements
+              </div>
+              <div class="achievements-grid">
+                <div class="achievement-badge">
+                  <i class="fa-solid fa-award"></i>
+                  <span>SIH Evaluator</span>
+                </div>
+                <div class="achievement-badge">
+                  <i class="fa-solid fa-medal"></i>
+                  <span>Buildathon Winner</span>
+                </div>
+                <div class="achievement-badge">
+                  <i class="fa-solid fa-microphone"></i>
+                  <span>Voice Agent Builder</span>
+                </div>
+                <div class="achievement-badge">
+                  <i class="fa-solid fa-cube"></i>
+                  <span>3D Web Designer</span>
+                </div>
+                <div class="achievement-badge">
+                  <i class="fa-solid fa-earth-americas"></i>
+                  <span>Gulf & India Clients</span>
+                </div>
+                <div class="achievement-badge">
+                  <i class="fa-solid fa-robot"></i>
+                  <span>AI Automation Expert</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="social-section">
+              <a href="https://www.linkedin.com/in/muhibbuddin-shaid-hakkeem-26a06921/" target="_blank" class="social-btn" title="LinkedIn">
+                <i class="fa-brands fa-linkedin-in"></i>
+              </a>
+              <a href="https://github.com/Shaidhms" target="_blank" class="social-btn" title="GitHub">
+                <i class="fa-brands fa-github"></i>
+              </a>
+              <a href="https://www.instagram.com/ai360_with_shaid/" target="_blank" class="social-btn" title="Instagram">
+                <i class="fa-brands fa-instagram"></i>
+              </a>
+              <a href="https://www.youtube.com/@ai360withshaid" target="_blank" class="social-btn" title="YouTube">
+                <i class="fa-brands fa-youtube"></i>
+              </a>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-section">
+              <button class="save-btn" id="saveContact">
+                <i class="fa-solid fa-address-book"></i>
+                Save Contact
+              </button>
+              <button class="share-btn" id="shareCard">
+                <i class="fa-solid fa-share-nodes"></i>
+                Share
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

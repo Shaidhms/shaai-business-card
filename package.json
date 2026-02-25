@@ -1,0 +1,9 @@
+{
+  "name": "shaai-business-card",
+  "version": "1.0.0",
+  "description": "3D Interactive Digital Business Card - S.H.A.A.I Solutions",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  }
+}
