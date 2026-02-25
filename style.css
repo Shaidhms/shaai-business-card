@@ -186,6 +186,7 @@ html, body {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   will-change: transform;
 }
 
@@ -194,6 +195,8 @@ html, body {
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
   border-radius: 20px;
   overflow: hidden;
   background: var(--card-bg);
@@ -204,8 +207,14 @@ html, body {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+.card-front {
+  transform: translateZ(1px);
+  -webkit-transform: translateZ(1px);
+}
+
 .card-back {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
+  -webkit-transform: rotateY(180deg) translateZ(1px);
 }
 
 /* Card Shine Effect */
