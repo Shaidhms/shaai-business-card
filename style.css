@@ -1731,6 +1731,11 @@ html, body {
   display: none;
 }
 
+.connect-cam-wrap .connect-cam-photo:not([src]),
+.connect-cam-wrap .connect-cam-photo[src=""] {
+  display: none !important;
+}
+
 .connect-cam-wrap canvas {
   display: none;
 }
@@ -1741,9 +1746,10 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--gold-light);
   font-size: 2.5rem;
-  opacity: 0.3;
+  opacity: 0.5;
+  background: rgba(212, 165, 116, 0.04);
 }
 
 /* Camera Actions */
@@ -1917,11 +1923,20 @@ html, body {
   letter-spacing: 0.1em;
 }
 
+.stamp-venue {
+  font-size: 0.48rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
 .stamp-date {
   margin-left: auto;
   font-size: 0.58rem;
   color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
+  text-align: right;
+  flex-shrink: 0;
 }
 
 /* Submit Button */
@@ -1996,16 +2011,17 @@ html, body {
 
 .success-title {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 6px;
+  color: var(--gold-light);
+  margin-bottom: 8px;
 }
 
 .success-desc {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
+  font-size: 0.85rem;
+  color: var(--text-primary);
   margin-bottom: 22px;
+  line-height: 1.5;
 }
 
 .success-whatsapp {

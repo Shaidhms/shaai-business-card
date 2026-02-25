@@ -666,7 +666,7 @@ function showToast(msg, icon) {
 // KEYBOARD
 // ==========================================
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && document.activeElement !== chatInput) {
+  if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
     e.preventDefault();
     flipCard();
   }
@@ -868,8 +868,21 @@ function createLightLeak() {
 }
 
 // ==========================================
-// QUICK CONNECT - Camera & Form
+// SNAP & LINK - Camera, Form & EmailJS
 // ==========================================
+// ---- EmailJS Setup ----
+// 1. Sign up free at https://www.emailjs.com
+// 2. Add Gmail service → copy SERVICE_ID
+// 3. Create template with variables: {{name}}, {{phone}}, {{email}}, {{role}}, {{photo}}, {{date}}
+// 4. Copy TEMPLATE_ID and PUBLIC_KEY below
+const EMAILJS_PUBLIC_KEY = 'sgbvvPX5ZIgnOzmH5';     // <-- Replace
+const EMAILJS_SERVICE_ID = 'service_b79gpyv';     // <-- Replace
+const EMAILJS_TEMPLATE_ID = 'template_burd1vp';   // <-- Replace
+
+if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+}
+
 const connectOverlay = document.getElementById('connectOverlay');
 const connectCloseBtn = document.getElementById('connectCloseBtn');
 const quickConnectBtn = document.getElementById('quickConnectBtn');
@@ -880,7 +893,9 @@ const camPlaceholder = document.getElementById('camPlaceholder');
 const camSnapBtn = document.getElementById('camSnapBtn');
 const camRetakeBtn = document.getElementById('camRetakeBtn');
 const connectNameInput = document.getElementById('connectNameInput');
-const connectContactInput = document.getElementById('connectContactInput');
+const connectPhoneInput = document.getElementById('connectPhoneInput');
+const connectEmailInput = document.getElementById('connectEmailInput');
+const connectRoleInput = document.getElementById('connectRoleInput');
 const connectSubmitBtn = document.getElementById('connectSubmitBtn');
 const connectSuccess = document.getElementById('connectSuccess');
 const successDesc = document.getElementById('successDesc');
@@ -983,7 +998,9 @@ camRetakeBtn.addEventListener('click', (e) => {
 connectSubmitBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   const name = connectNameInput.value.trim();
-  const contact = connectContactInput.value.trim();
+  const phone = connectPhoneInput.value.trim();
+  const email = connectEmailInput.value.trim();
+  const role = connectRoleInput.value.trim();
 
   if (!name) {
     connectNameInput.parentElement.style.borderColor = 'rgba(255, 100, 100, 0.5)';
@@ -994,32 +1011,63 @@ connectSubmitBtn.addEventListener('click', (e) => {
 
   playSound('click');
 
+  // Show loading state
+  const origBtnHTML = connectSubmitBtn.innerHTML;
+  connectSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+  connectSubmitBtn.disabled = true;
+
+  const connectionDate = new Date().toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+
   // Save to localStorage
   const connections = JSON.parse(localStorage.getItem('gff_connections') || '[]');
   connections.push({
-    name,
-    contact,
+    name, phone, email, role,
     photo: photoDataUrl,
     date: new Date().toISOString(),
-    event: 'GFF 2026'
+    event: 'Global Freelancers Festival 2026'
   });
   localStorage.setItem('gff_connections', JSON.stringify(connections));
 
-  // Hide form, show success
-  document.getElementById('connectTitle').style.display = 'none';
-  document.getElementById('connectDesc').style.display = 'none';
-  document.getElementById('connectCamWrap').style.display = 'none';
-  document.getElementById('connectCamActions').style.display = 'none';
-  document.getElementById('connectFields').style.display = 'none';
-  document.getElementById('connectStamp').style.display = 'none';
-  connectSubmitBtn.style.display = 'none';
+  // Send email via EmailJS (if configured)
+  const emailPromise = (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY')
+    ? emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        name,
+        phone: phone || 'Not provided',
+        email: email || 'Not provided',
+        role: role || 'Not provided',
+        photo: photoDataUrl || 'No photo taken',
+        date: connectionDate,
+        event: 'Global Freelancers Festival 2026',
+        venue: 'IIT Madras Research Park, Chennai',
+      }).catch(() => null)
+    : Promise.resolve(null);
 
-  successDesc.textContent = `Nice meeting you, ${name}!`;
-  const waText = encodeURIComponent(
-    `Hi Shaid! I'm ${name}${contact ? ' (' + contact + ')' : ''} — we just connected at GFF! Let's keep in touch.`
-  );
-  successWhatsapp.href = `https://wa.me/916380257066?text=${waText}`;
-  connectSuccess.classList.add('visible');
+  emailPromise.then(() => {
+    // Hide form, show success
+    document.getElementById('connectTitle').style.display = 'none';
+    document.getElementById('connectDesc').style.display = 'none';
+    document.getElementById('connectCamWrap').style.display = 'none';
+    document.getElementById('connectCamActions').style.display = 'none';
+    document.getElementById('connectFields').style.display = 'none';
+    document.getElementById('connectStamp').style.display = 'none';
+    connectSubmitBtn.style.display = 'none';
+
+    successDesc.textContent = role
+      ? `Nice meeting you, ${name} — ${role}!`
+      : `Nice meeting you, ${name}!`;
+    const details = [role, phone, email].filter(Boolean).join(' | ');
+    const waText = encodeURIComponent(
+      `Hi Shaid! I'm ${name}${details ? ' — ' + details : ''} — we just connected at the Global Freelancers Festival 2026! Let's keep in touch.`
+    );
+    successWhatsapp.href = `https://wa.me/916380257066?text=${waText}`;
+    connectSuccess.classList.add('visible');
+
+    // Restore button for next use
+    connectSubmitBtn.innerHTML = origBtnHTML;
+    connectSubmitBtn.disabled = false;
+  });
 });
 
 // Done
@@ -1030,7 +1078,9 @@ successDoneBtn.addEventListener('click', (e) => {
 
 function resetConnectForm() {
   connectNameInput.value = '';
-  connectContactInput.value = '';
+  connectPhoneInput.value = '';
+  connectEmailInput.value = '';
+  connectRoleInput.value = '';
   photoDataUrl = null;
   camPhoto.style.display = 'none';
   camRetakeBtn.style.display = 'none';

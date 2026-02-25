@@ -242,7 +242,7 @@
             <div class="action-section">
               <button class="connect-btn" id="quickConnectBtn">
                 <i class="fa-solid fa-camera"></i>
-                Quick Connect
+                Snap & Link
               </button>
               <button class="share-btn" id="shareCard">
                 <i class="fa-solid fa-share-nodes"></i>
@@ -300,9 +300,9 @@
       </button>
 
       <div class="connect-title" id="connectTitle">
-        <i class="fa-solid fa-bolt"></i> QUICK CONNECT
+        <i class="fa-solid fa-bolt"></i> SNAP & LINK
       </div>
-      <p class="connect-desc" id="connectDesc">Snap a pic & drop your details &mdash; let's stay connected!</p>
+      <p class="connect-desc" id="connectDesc">Capture the moment &mdash; drop your details & let's make this connection official!</p>
 
       <!-- Camera -->
       <div class="connect-cam-wrap" id="connectCamWrap">
@@ -330,8 +330,16 @@
           <input type="text" id="connectNameInput" placeholder="Your name" autocomplete="off" />
         </div>
         <div class="connect-field">
-          <i class="fa-solid fa-at"></i>
-          <input type="text" id="connectContactInput" placeholder="Email or phone" autocomplete="off" />
+          <i class="fa-solid fa-phone"></i>
+          <input type="tel" id="connectPhoneInput" placeholder="Phone number" autocomplete="off" />
+        </div>
+        <div class="connect-field">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" id="connectEmailInput" placeholder="Email address" autocomplete="off" />
+        </div>
+        <div class="connect-field">
+          <i class="fa-solid fa-briefcase"></i>
+          <input type="text" id="connectRoleInput" placeholder="What do you do? (e.g. Designer at Google)" autocomplete="off" />
         </div>
       </div>
 
@@ -341,8 +349,9 @@
         <div class="stamp-text">
           <span class="stamp-label">Connected at</span>
           <span class="stamp-event">GFF 2026</span>
+          <span class="stamp-venue">IIT Madras Research Park, Chennai</span>
         </div>
-        <div class="stamp-date" id="stampDate"></div>
+        <div class="stamp-date" id="stampDate">Feb 28, 2026</div>
       </div>
 
       <!-- Submit -->
@@ -363,6 +372,9 @@
       </div>
     </div>
   </div>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
   <!-- Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
