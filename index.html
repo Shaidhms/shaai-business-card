@@ -299,6 +299,11 @@
         <i class="fa-solid fa-xmark"></i>
       </button>
 
+      <!-- GFF Logo -->
+      <div class="connect-gff-logo" id="connectGffLogo">
+        <img src="gff-logo.svg" alt="Global Freelancers Festival 2026" />
+      </div>
+
       <div class="connect-title" id="connectTitle">
         <i class="fa-solid fa-bolt"></i> SNAP & LINK
       </div>
@@ -312,16 +317,22 @@
         <div class="connect-cam-placeholder" id="camPlaceholder">
           <i class="fa-solid fa-user"></i>
         </div>
+        <!-- Snap button inside circle -->
+        <button class="cam-snap-btn cam-snap-overlay" id="camSnapBtn">
+          <i class="fa-solid fa-camera"></i>
+        </button>
       </div>
 
       <div class="connect-cam-actions" id="connectCamActions">
-        <button class="cam-snap-btn" id="camSnapBtn">
-          <i class="fa-solid fa-camera"></i>
-        </button>
         <button class="cam-retake-btn" id="camRetakeBtn" style="display:none;">
           <i class="fa-solid fa-rotate-left"></i> Retake
         </button>
       </div>
+
+      <!-- Floating camera bubble for group selfies -->
+      <button class="cam-float-bubble" id="camFloatBubble" title="Take a selfie">
+        <i class="fa-solid fa-camera"></i>
+      </button>
 
       <!-- Form -->
       <div class="connect-fields" id="connectFields">

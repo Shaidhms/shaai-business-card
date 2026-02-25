@@ -902,17 +902,23 @@ const successDesc = document.getElementById('successDesc');
 const successWhatsapp = document.getElementById('successWhatsapp');
 const successDoneBtn = document.getElementById('successDoneBtn');
 
+const camFloatBubble = document.getElementById('camFloatBubble');
 let camStream = null;
 let photoDataUrl = null;
 
-// Open overlay
-quickConnectBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
+function openConnect() {
   connectOverlay.classList.add('open');
+  camFloatBubble.classList.add('visible');
   startCamera();
   playSound('click');
   document.getElementById('stampDate').textContent =
     new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Open overlay
+quickConnectBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  openConnect();
 });
 
 // Close overlay
@@ -927,6 +933,7 @@ connectOverlay.addEventListener('click', (e) => {
 
 function closeConnect() {
   connectOverlay.classList.remove('open');
+  camFloatBubble.classList.remove('visible');
   stopCamera();
   resetConnectForm();
 }
@@ -982,6 +989,19 @@ camSnapBtn.addEventListener('click', (e) => {
   const wrap = document.getElementById('connectCamWrap');
   wrap.style.boxShadow = '0 0 30px rgba(255,255,255,0.5), 0 0 60px rgba(212,165,116,0.3)';
   setTimeout(() => { wrap.style.boxShadow = ''; }, 400);
+});
+
+// Floating bubble triggers snap
+camFloatBubble.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (camStream) {
+    camSnapBtn.click();
+  } else if (!photoDataUrl) {
+    // Restart camera and snap
+    startCamera().then(() => {
+      setTimeout(() => camSnapBtn.click(), 500);
+    });
+  }
 });
 
 // Retake
@@ -1046,6 +1066,7 @@ connectSubmitBtn.addEventListener('click', (e) => {
 
   emailPromise.then(() => {
     // Hide form, show success
+    document.getElementById('connectGffLogo').style.display = 'none';
     document.getElementById('connectTitle').style.display = 'none';
     document.getElementById('connectDesc').style.display = 'none';
     document.getElementById('connectCamWrap').style.display = 'none';
@@ -1088,6 +1109,7 @@ function resetConnectForm() {
   connectSuccess.classList.remove('visible');
 
   // Restore form elements
+  document.getElementById('connectGffLogo').style.display = '';
   document.getElementById('connectTitle').style.display = '';
   document.getElementById('connectDesc').style.display = '';
   document.getElementById('connectCamWrap').style.display = '';
