@@ -1,6 +1,6 @@
 /* ============================================
-   S.H.A.A.I Solutions - 3D Interactive Card v2
-   Mobile-Optimized + Physics + Sound + Holo
+   S.H.A.A.I Solutions - 3D Interactive Card v3
+   Ultra-smooth Mobile + Creative Effects
    ============================================ */
 
 const isMobile = /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) ||
@@ -24,7 +24,6 @@ function playSound(type) {
     if (type === 'whoosh') playSwoosh();
     else if (type === 'click') playClick();
     else if (type === 'intro') playIntroChord();
-    else if (type === 'bounce') playBounce();
   } catch (e) { /* silent */ }
 }
 
@@ -55,19 +54,6 @@ function playClick() {
   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
   osc.connect(gain).connect(audioCtx.destination);
   osc.start(); osc.stop(t + 0.06);
-}
-
-function playBounce() {
-  const t = audioCtx.currentTime;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(400, t);
-  osc.frequency.exponentialRampToValueAtTime(150, t + 0.15);
-  gain.gain.setValueAtTime(0.05, t);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
-  osc.connect(gain).connect(audioCtx.destination);
-  osc.start(); osc.stop(t + 0.15);
 }
 
 function playIntroChord() {
@@ -124,6 +110,8 @@ setTimeout(() => {
   document.getElementById('cinematicIntro').classList.add('hidden');
   initAudio();
   playSound('intro');
+  // Trigger staggered content entrance
+  document.querySelector('.card')?.classList.add('entered');
 }, 3200);
 
 // ==========================================
@@ -132,17 +120,22 @@ setTimeout(() => {
 const canvas = document.getElementById('bg-canvas');
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
+const renderer = new THREE.WebGLRenderer({
+  canvas,
+  antialias: !isMobile,
+  alpha: true,
+  powerPreference: isMobile ? 'low-power' : 'high-performance',
+});
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 2));
 renderer.setClearColor(0x06060e, 1);
 camera.position.z = 30;
 
 // ==========================================
-// PARTICLES (reduced on mobile)
+// PARTICLES (drastically reduced on mobile)
 // ==========================================
-const PARTICLE_COUNT = isMobile ? 120 : 300;
+const PARTICLE_COUNT = isMobile ? 50 : 300;
 const particleGeometry = new THREE.BufferGeometry();
 const particlePositions = new Float32Array(PARTICLE_COUNT * 3);
 const particleSpeeds = [];
@@ -152,16 +145,16 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
   particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 60;
   particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 30;
   particleSpeeds.push({
-    x: (Math.random() - 0.5) * 0.008,
-    y: (Math.random() - 0.5) * 0.008,
-    z: (Math.random() - 0.5) * 0.004,
+    x: (Math.random() - 0.5) * 0.006,
+    y: (Math.random() - 0.5) * 0.006,
+    z: (Math.random() - 0.5) * 0.003,
   });
 }
 
 particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
 
 const particleMaterial = new THREE.PointsMaterial({
-  size: isMobile ? 0.12 : 0.08,
+  size: isMobile ? 0.15 : 0.08,
   color: 0xd4a574,
   transparent: true,
   opacity: 0.6,
@@ -173,32 +166,37 @@ const particles = new THREE.Points(particleGeometry, particleMaterial);
 scene.add(particles);
 
 // ==========================================
-// CONNECTION LINES (reduced on mobile)
+// CONNECTION LINES (disabled on mobile!)
 // ==========================================
-const MAX_LINES = isMobile ? 150 : 500;
-const lineGeometry = new THREE.BufferGeometry();
-const linePositions = new Float32Array(MAX_LINES * 6);
-lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-lineGeometry.setDrawRange(0, 0);
+let lines = null;
+let linePositionsArr = null;
+const MAX_LINES = 500;
 
-const lineMaterial = new THREE.LineBasicMaterial({
-  color: 0xd4a574,
-  transparent: true,
-  opacity: 0.08,
-  blending: THREE.AdditiveBlending,
-  depthWrite: false,
-});
+if (!isMobile) {
+  const lineGeometry = new THREE.BufferGeometry();
+  linePositionsArr = new Float32Array(MAX_LINES * 6);
+  lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositionsArr, 3));
+  lineGeometry.setDrawRange(0, 0);
 
-const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-scene.add(lines);
+  const lineMaterial = new THREE.LineBasicMaterial({
+    color: 0xd4a574,
+    transparent: true,
+    opacity: 0.08,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+  scene.add(lines);
+}
 
 // ==========================================
-// FLOATING SHAPES (reduced on mobile)
+// FLOATING SHAPES (fewer on mobile)
 // ==========================================
 const shapes = [];
 const shapeGroup = new THREE.Group();
-const SHAPE_COUNT = isMobile ? 5 : 8;
-const OCTA_COUNT = isMobile ? 3 : 5;
+const SHAPE_COUNT = isMobile ? 3 : 8;
+const OCTA_COUNT = isMobile ? 2 : 5;
 
 for (let i = 0; i < SHAPE_COUNT; i++) {
   const geo = new THREE.IcosahedronGeometry(Math.random() * 0.8 + 0.3, 0);
@@ -238,24 +236,47 @@ scene.add(shapeGroup);
 // ==========================================
 const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
 
-window.addEventListener('mousemove', (e) => {
-  mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
-  mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
-});
+if (!isMobile) {
+  window.addEventListener('mousemove', (e) => {
+    mouse.targetX = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+}
 
 // ==========================================
-// THREE.JS ANIMATION LOOP
+// CARD ELEMENTS (cached references)
+// ==========================================
+const card = document.getElementById('card');
+const cardContainer = document.getElementById('cardContainer');
+const flipBackBtn = document.getElementById('flipBackBtn');
+const instruction = document.getElementById('instruction');
+let isFlipped = false;
+let hasFlippedOnce = false;
+
+// Cache DOM refs used in animation loop
+const holoShimmers = card.querySelectorAll('.holo-shimmer');
+const cardShines = card.querySelectorAll('.card-shine');
+
+// --- Tilt State ---
+let tiltX = 0, tiltY = 0;
+let targetTiltX = 0, targetTiltY = 0;
+let currentFlipAngle = 0;
+let idleTime = 0;
+
+// ==========================================
+// UNIFIED ANIMATION LOOP (single rAF)
 // ==========================================
 let time = 0;
-let lineFrame = 0;
-const LINE_UPDATE_INTERVAL = isMobile ? 3 : 1;
 
-function animateScene() {
-  requestAnimationFrame(animateScene);
+function animate() {
+  requestAnimationFrame(animate);
   time += 0.01;
 
-  mouse.x += (mouse.targetX - mouse.x) * 0.05;
-  mouse.y += (mouse.targetY - mouse.y) * 0.05;
+  // --- Three.js Scene ---
+  if (!isMobile) {
+    mouse.x += (mouse.targetX - mouse.x) * 0.05;
+    mouse.y += (mouse.targetY - mouse.y) * 0.05;
+  }
 
   const positions = particles.geometry.attributes.position.array;
   for (let i = 0; i < PARTICLE_COUNT; i++) {
@@ -268,10 +289,8 @@ function animateScene() {
   }
   particles.geometry.attributes.position.needsUpdate = true;
 
-  // Update lines every N frames on mobile for performance
-  lineFrame++;
-  if (lineFrame >= LINE_UPDATE_INTERVAL) {
-    lineFrame = 0;
+  // Connection lines (desktop only)
+  if (lines) {
     let lineIndex = 0;
     const linePos = lines.geometry.attributes.position.array;
     for (let i = 0; i < PARTICLE_COUNT && lineIndex < MAX_LINES; i++) {
@@ -279,8 +298,8 @@ function animateScene() {
         const dx = positions[i * 3] - positions[j * 3];
         const dy = positions[i * 3 + 1] - positions[j * 3 + 1];
         const dz = positions[i * 3 + 2] - positions[j * 3 + 2];
-        const dist = dx * dx + dy * dy + dz * dz; // skip sqrt for perf
-        if (dist < 64) { // 8*8
+        const dist = dx * dx + dy * dy + dz * dz;
+        if (dist < 64) {
           linePos[lineIndex * 6] = positions[i * 3];
           linePos[lineIndex * 6 + 1] = positions[i * 3 + 1];
           linePos[lineIndex * 6 + 2] = positions[i * 3 + 2];
@@ -301,15 +320,51 @@ function animateScene() {
     shape.position.y += Math.sin(time + shape.userData.floatOffset) * shape.userData.floatSpeed;
   });
 
-  shapeGroup.rotation.y = mouse.x * 0.08;
-  shapeGroup.rotation.x = mouse.y * 0.05;
-  particles.rotation.y = mouse.x * 0.03;
-  particles.rotation.x = mouse.y * 0.02;
+  if (!isMobile) {
+    shapeGroup.rotation.y = mouse.x * 0.08;
+    shapeGroup.rotation.x = mouse.y * 0.05;
+    particles.rotation.y = mouse.x * 0.03;
+    particles.rotation.x = mouse.y * 0.02;
+  }
 
   renderer.render(scene, camera);
+
+  // --- Card Animation ---
+  // Idle floating effect (subtle auto-tilt when no interaction)
+  idleTime += 0.008;
+  if (Math.abs(targetTiltX) < 0.5 && Math.abs(targetTiltY) < 0.5) {
+    const idleTiltX = Math.sin(idleTime * 0.7) * 2;
+    const idleTiltY = Math.cos(idleTime * 0.5) * 2.5;
+    tiltX += (idleTiltX - tiltX) * 0.03;
+    tiltY += (idleTiltY - tiltY) * 0.03;
+  } else {
+    const tiltSpeed = isMobile ? 0.12 : 0.08;
+    tiltX += (targetTiltX - tiltX) * tiltSpeed;
+    tiltY += (targetTiltY - tiltY) * tiltSpeed;
+  }
+
+  // Smooth flip
+  const targetFlip = isFlipped ? 180 : 0;
+  const flipSpeed = isMobile ? 0.15 : 0.12;
+  currentFlipAngle += (targetFlip - currentFlipAngle) * flipSpeed;
+  card.style.transform = `rotateY(${currentFlipAngle + tiltY}deg) rotateX(${tiltX}deg)`;
+
+  // Holographic Shimmer (cached refs, no querySelectorAll)
+  const holoAngle = 135 + tiltY * 3 + tiltX * 2;
+  const holoIntensity = Math.min(1, (Math.abs(tiltX) + Math.abs(tiltY)) / 6);
+  for (let i = 0; i < holoShimmers.length; i++) {
+    holoShimmers[i].style.setProperty('--holo-angle', holoAngle + 'deg');
+    holoShimmers[i].style.backgroundPosition = `${50 + tiltY * 5}% ${50 + tiltX * 5}%`;
+    holoShimmers[i].style.opacity = holoIntensity * 0.8;
+  }
+
+  // Shine (cached refs)
+  for (let i = 0; i < cardShines.length; i++) {
+    cardShines[i].style.transform = `translateX(${tiltY * 3}px) translateY(${tiltX * 3}px)`;
+  }
 }
 
-animateScene();
+animate();
 
 // ==========================================
 // RESIZE HANDLER
@@ -318,30 +373,14 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 2));
 });
 
 // ==========================================
-// CARD ELEMENTS
-// ==========================================
-const card = document.getElementById('card');
-const cardContainer = document.getElementById('cardContainer');
-const flipBackBtn = document.getElementById('flipBackBtn');
-const instruction = document.getElementById('instruction');
-let isFlipped = false;
-let hasFlippedOnce = false;
-
-// --- Tilt State ---
-let tiltX = 0, tiltY = 0;
-let targetTiltX = 0, targetTiltY = 0;
-let currentFlipAngle = 0;
-
-// ==========================================
-// TAP TO FLIP (simple click/tap handler)
+// TAP TO FLIP (with ripple effect)
 // ==========================================
 cardContainer.addEventListener('click', (e) => {
   const target = e.target;
-  // Skip if clicking interactive elements on back face
   if (target.closest && (
     target.closest('a') ||
     target.closest('button') ||
@@ -349,8 +388,24 @@ cardContainer.addEventListener('click', (e) => {
     target.closest('.chat-fab') ||
     target.closest('.mute-btn')
   )) return;
+  createRipple(e);
   flipCard();
 });
+
+// ==========================================
+// TAP RIPPLE EFFECT
+// ==========================================
+function createRipple(e) {
+  const rect = cardContainer.getBoundingClientRect();
+  const ripple = document.createElement('div');
+  ripple.className = 'tap-ripple';
+  const x = (e.clientX || rect.left + rect.width / 2) - rect.left;
+  const y = (e.clientY || rect.top + rect.height / 2) - rect.top;
+  ripple.style.left = x + 'px';
+  ripple.style.top = y + 'px';
+  cardContainer.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 700);
+}
 
 // ==========================================
 // MOUSE TILT (desktop only)
@@ -374,47 +429,18 @@ if (!isMobile) {
 // GYROSCOPE TILT (mobile)
 // ==========================================
 if (isMobile && window.DeviceOrientationEvent) {
+  let lastGamma = 0, lastBeta = 0;
+
   window.addEventListener('deviceorientation', (e) => {
     if (e.gamma !== null && e.beta !== null) {
-      targetTiltY = Math.max(-12, Math.min(12, e.gamma * 0.4));
-      targetTiltX = Math.max(-12, Math.min(12, (e.beta - 45) * 0.3));
+      // Smooth out noisy gyroscope readings
+      lastGamma += (e.gamma - lastGamma) * 0.3;
+      lastBeta += (e.beta - lastBeta) * 0.3;
+      targetTiltY = Math.max(-10, Math.min(10, lastGamma * 0.35));
+      targetTiltX = Math.max(-10, Math.min(10, (lastBeta - 45) * 0.25));
     }
   });
 }
-
-// ==========================================
-// MAIN CARD ANIMATION LOOP
-// ==========================================
-function animateCard() {
-  requestAnimationFrame(animateCard);
-
-  // --- Tilt (smoother interpolation) ---
-  const tiltSpeed = isMobile ? 0.12 : 0.08;
-  tiltX += (targetTiltX - tiltX) * tiltSpeed;
-  tiltY += (targetTiltY - tiltY) * tiltSpeed;
-
-  // Smooth flip (snappier on mobile)
-  const targetFlip = isFlipped ? 180 : 0;
-  const flipSpeed = isMobile ? 0.15 : 0.12;
-  currentFlipAngle += (targetFlip - currentFlipAngle) * flipSpeed;
-  card.style.transform = `rotateY(${currentFlipAngle + tiltY}deg) rotateX(${tiltX}deg)`;
-
-  // --- Holographic Shimmer ---
-  const holoAngle = 135 + tiltY * 3 + tiltX * 2;
-  const holoIntensity = Math.min(1, (Math.abs(tiltX) + Math.abs(tiltY)) / 8);
-  card.querySelectorAll('.holo-shimmer').forEach((el) => {
-    el.style.setProperty('--holo-angle', holoAngle + 'deg');
-    el.style.backgroundPosition = `${50 + tiltY * 5}% ${50 + tiltX * 5}%`;
-    el.style.opacity = holoIntensity * 0.8;
-  });
-
-  // --- Shine ---
-  card.querySelectorAll('.card-shine').forEach((el) => {
-    el.style.transform = `translateX(${tiltY * 3}px) translateY(${tiltX * 3}px)`;
-  });
-}
-
-animateCard();
 
 // ==========================================
 // FLIP CARD
@@ -422,6 +448,10 @@ animateCard();
 function flipCard() {
   isFlipped = !isFlipped;
   playSound('whoosh');
+
+  // Add pulse effect
+  cardContainer.classList.add('flip-pulse');
+  setTimeout(() => cardContainer.classList.remove('flip-pulse'), 400);
 
   if (!hasFlippedOnce) {
     hasFlippedOnce = true;
@@ -437,7 +467,7 @@ flipBackBtn.addEventListener('click', (e) => {
 });
 
 // ==========================================
-// FLIP BURST PARTICLES
+// FLIP BURST PARTICLES (sparkle style)
 // ==========================================
 function createFlipBurst() {
   const container = document.createElement('div');
@@ -447,23 +477,28 @@ function createFlipBurst() {
   const rect = cardContainer.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  const count = isMobile ? 14 : 24;
+  const count = isMobile ? 10 : 20;
 
   for (let i = 0; i < count; i++) {
     const p = document.createElement('div');
     p.className = 'flip-particle';
-    const angle = (Math.PI * 2 * i) / count;
-    const dist = 50 + Math.random() * 80;
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+    const dist = 40 + Math.random() * 100;
     p.style.left = cx + 'px';
     p.style.top = cy + 'px';
     p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
     p.style.setProperty('--ty', Math.sin(angle) * dist + 'px');
-    p.style.background = Math.random() > 0.5 ? '#d4a574' : '#06b6d4';
-    p.style.animationDelay = Math.random() * 0.1 + 's';
+    p.style.setProperty('--rot', (Math.random() * 360) + 'deg');
+    // Mix of gold, cyan, and white sparkles
+    const colors = ['#d4a574', '#06b6d4', '#e8c9a0', '#fbbf24', '#ffffff'];
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDelay = Math.random() * 0.15 + 's';
+    p.style.width = (2 + Math.random() * 4) + 'px';
+    p.style.height = p.style.width;
     container.appendChild(p);
   }
 
-  setTimeout(() => container.remove(), 1000);
+  setTimeout(() => container.remove(), 900);
 }
 
 // ==========================================
@@ -689,7 +724,6 @@ function handleUserMessage(text) {
   chatSuggestions.style.display = 'none';
   playSound('click');
 
-  // Show typing, then respond
   addTypingIndicator();
   const delay = 400 + Math.random() * 600;
   setTimeout(() => {
@@ -739,4 +773,3 @@ document.querySelectorAll('.chat-chip').forEach(chip => {
     handleUserMessage(chip.dataset.q);
   });
 });
-
