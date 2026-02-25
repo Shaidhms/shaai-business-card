@@ -870,18 +870,7 @@ function createLightLeak() {
 // ==========================================
 // SNAP & LINK - Camera, Form & EmailJS
 // ==========================================
-// ---- EmailJS Setup ----
-// 1. Sign up free at https://www.emailjs.com
-// 2. Add Gmail service → copy SERVICE_ID
-// 3. Create template with variables: {{name}}, {{phone}}, {{email}}, {{role}}, {{photo}}, {{date}}
-// 4. Copy TEMPLATE_ID and PUBLIC_KEY below
-const EMAILJS_PUBLIC_KEY = 'sgbvvPX5ZIgnOzmH5';     // <-- Replace
-const EMAILJS_SERVICE_ID = 'service_b79gpyv';     // <-- Replace
-const EMAILJS_TEMPLATE_ID = 'template_burd1vp';   // <-- Replace
-
-if (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY') {
-  emailjs.init(EMAILJS_PUBLIC_KEY);
-}
+// ---- Resend Email via Vercel API ----
 
 const connectOverlay = document.getElementById('connectOverlay');
 const connectCloseBtn = document.getElementById('connectCloseBtn');
@@ -980,7 +969,7 @@ camSnapBtn.addEventListener('click', (e) => {
     const H = 720;
     const border = 14;
     const topBar = 80;
-    const bottomBar = 70;
+    const bottomBar = 80;
     const ctx = camCanvas.getContext('2d');
     camCanvas.width = W;
     camCanvas.height = H;
@@ -1027,34 +1016,35 @@ camSnapBtn.addEventListener('click', (e) => {
     ctx.drawImage(camFeed, W - border - (W - border * 2), photoY, W - border * 2, photoH);
     ctx.restore();
 
-    // --- Bottom bar: contact info ---
+    // --- Bottom bar: contact info (light banner like top) ---
     const botY = H - border - bottomBar;
-    ctx.fillStyle = '#0d0d1a';
+    ctx.fillStyle = '#f5f3f0';
     ctx.fillRect(border, botY, W - border * 2, bottomBar);
 
     // "New connection via" label
-    ctx.font = '9px "Inter", sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.font = '600 11px "Inter", sans-serif';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
+    ctx.letterSpacing = '2px';
     ctx.fillText('NEW CONNECTION VIA', W / 2, botY + 8);
 
     // Name
-    ctx.font = 'bold 16px "Playfair Display", serif';
-    ctx.fillStyle = '#d4a574';
+    ctx.font = 'bold 20px "Playfair Display", serif';
+    ctx.fillStyle = '#1a1a2e';
     ctx.textBaseline = 'top';
-    ctx.fillText('SHAID HAKKEEM', W / 2, botY + 22);
+    ctx.fillText('SHAID HAKKEEM', W / 2, botY + 23);
 
     // Contact line
-    ctx.font = '10px "Inter", sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.font = '500 12px "Inter", sans-serif';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.textBaseline = 'top';
-    ctx.fillText('+91 63802 57066  •  shaid360.com', W / 2, botY + 44);
+    ctx.fillText('+91 63802 57066  •  shaid360.com', W / 2, botY + 50);
 
     // Date in small text bottom-right
     const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.font = '10px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     ctx.fillText(dateStr, W - border - 10, H - border - 6);
@@ -1234,21 +1224,21 @@ connectSubmitBtn.addEventListener('click', (e) => {
   });
   localStorage.setItem('gff_connections', JSON.stringify(connections));
 
-  // Send email via EmailJS (if configured)
-  const emailPromise = (typeof emailjs !== 'undefined' && EMAILJS_PUBLIC_KEY !== 'YOUR_PUBLIC_KEY')
-    ? emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        name,
-        phone: phone || 'Not provided',
-        email: email || 'Not provided',
-        role: role || 'Not provided',
-        photo: photoDataUrl || 'No photo taken',
-        date: connectionDate,
-        event: 'Global Freelancers Festival 2026',
-        venue: 'IIT Madras Research Park, Chennai',
-      }).catch(() => null)
-    : Promise.resolve(null);
-
-  emailPromise.then(() => {
+  // Send email via Resend API
+  fetch('/api/send-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name,
+      phone: phone || 'Not provided',
+      email: email || 'Not provided',
+      role: role || 'Not provided',
+      photo: photoDataUrl || 'No photo taken',
+      date: connectionDate,
+      event: 'Global Freelancers Festival 2026',
+      venue: 'IIT Madras Research Park, Chennai',
+    }),
+  }).catch(() => null).then(() => {
     // Hide form, show success
     document.getElementById('connectGffLogo').style.display = 'none';
     document.getElementById('connectTitle').style.display = 'none';
