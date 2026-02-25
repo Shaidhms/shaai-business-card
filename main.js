@@ -522,6 +522,54 @@ function animateStats() {
 setTimeout(animateStats, 3500);
 
 // ==========================================
+// TYPING BIO (cycling roles)
+// ==========================================
+const typingEl = document.getElementById('typingText');
+const roles = [
+  'Web Applications',
+  'AI Automation',
+  'Voice Agents',
+  '3D Websites',
+  'E-Commerce Stores',
+  'Mobile Apps',
+  'Business Dashboards',
+];
+let roleIndex = 0;
+let roleCharIndex = 0;
+let isDeleting = false;
+let typingTimeout = null;
+
+function typeBio() {
+  const current = roles[roleIndex];
+
+  if (!isDeleting) {
+    typingEl.textContent = current.substring(0, roleCharIndex + 1);
+    roleCharIndex++;
+
+    if (roleCharIndex === current.length) {
+      // Pause at full text, then start deleting
+      typingTimeout = setTimeout(() => { isDeleting = true; typeBio(); }, 2000);
+      return;
+    }
+    typingTimeout = setTimeout(typeBio, 60 + Math.random() * 40);
+  } else {
+    typingEl.textContent = current.substring(0, roleCharIndex - 1);
+    roleCharIndex--;
+
+    if (roleCharIndex === 0) {
+      isDeleting = false;
+      roleIndex = (roleIndex + 1) % roles.length;
+      typingTimeout = setTimeout(typeBio, 400);
+      return;
+    }
+    typingTimeout = setTimeout(typeBio, 30);
+  }
+}
+
+// Start typing bio after card entrance
+setTimeout(typeBio, 4200);
+
+// ==========================================
 // SAVE CONTACT (vCard)
 // ==========================================
 document.getElementById('saveContact').addEventListener('click', (e) => {
