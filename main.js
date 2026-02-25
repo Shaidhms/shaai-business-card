@@ -966,87 +966,107 @@ function stopCamera() {
   camFeed.srcObject = null;
 }
 
+// Preload GFF logo for canvas frame
+const gffLogoImg = new Image();
+gffLogoImg.src = 'gff-logo.svg';
+
 // Snap photo with GFF frame overlay
 camSnapBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   playSound('click');
 
   if (camStream) {
-    const size = 600;
-    const border = 18;
-    const topBar = 52;
-    const bottomBar = 44;
+    const W = 600;
+    const H = 720;
+    const border = 14;
+    const topBar = 80;
+    const bottomBar = 70;
     const ctx = camCanvas.getContext('2d');
-    camCanvas.width = size;
-    camCanvas.height = size;
+    camCanvas.width = W;
+    camCanvas.height = H;
 
-    // --- Draw frame background ---
-    // Outer border gradient
-    const borderGrad = ctx.createLinearGradient(0, 0, size, size);
+    // --- Outer border gradient ---
+    const borderGrad = ctx.createLinearGradient(0, 0, W, H);
     borderGrad.addColorStop(0, '#d4a574');
     borderGrad.addColorStop(0.5, '#06b6d4');
     borderGrad.addColorStop(1, '#d4a574');
     ctx.fillStyle = borderGrad;
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, W, H);
 
-    // Inner dark fill
+    // --- Inner dark fill ---
     ctx.fillStyle = '#0d0d1a';
-    ctx.fillRect(border, border, size - border * 2, size - border * 2);
+    ctx.fillRect(border, border, W - border * 2, H - border * 2);
 
-    // --- Draw mirrored photo in center ---
+    // --- Top bar: white banner with GFF logo ---
+    const topX = border;
+    const topY = border;
+    const topW = W - border * 2;
+    ctx.fillStyle = '#f5f3f0';
+    ctx.fillRect(topX, topY, topW, topBar);
+
+    // Draw GFF logo centered in top bar
+    if (gffLogoImg.complete && gffLogoImg.naturalWidth) {
+      const logoH = topBar - 16;
+      const logoW = logoH * (gffLogoImg.naturalWidth / gffLogoImg.naturalHeight);
+      ctx.drawImage(gffLogoImg, (W - logoW) / 2, topY + 8, logoW, logoH);
+    } else {
+      // Fallback text
+      ctx.font = 'bold 20px "Playfair Display", serif';
+      ctx.fillStyle = '#333';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('GLOBAL FREELANCERS FESTIVAL 2026', W / 2, topY + topBar / 2);
+    }
+
+    // --- Photo area ---
     const photoY = border + topBar;
-    const photoH = size - border * 2 - topBar - bottomBar;
+    const photoH = H - border * 2 - topBar - bottomBar;
     ctx.save();
-    ctx.translate(size, 0);
+    ctx.translate(W, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(camFeed, size - border - (size - border * 2), photoY, size - border * 2, photoH);
+    ctx.drawImage(camFeed, W - border - (W - border * 2), photoY, W - border * 2, photoH);
     ctx.restore();
 
-    // --- Top bar: GFF 2026 branding ---
-    ctx.fillStyle = 'rgba(13, 13, 26, 0.85)';
-    ctx.fillRect(border, border, size - border * 2, topBar);
+    // --- Bottom bar: contact info ---
+    const botY = H - border - bottomBar;
+    ctx.fillStyle = '#0d0d1a';
+    ctx.fillRect(border, botY, W - border * 2, bottomBar);
 
-    // GFF text
-    ctx.font = 'bold 18px "Playfair Display", serif';
-    ctx.fillStyle = '#d4a574';
+    // "New connection via" label
+    ctx.font = '9px "Inter", sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('GLOBAL FREELANCERS FESTIVAL', size / 2, border + topBar / 2 - 6);
+    ctx.textBaseline = 'top';
+    ctx.fillText('NEW CONNECTION VIA', W / 2, botY + 8);
 
-    // Subtitle
-    ctx.font = '10px "Inter", sans-serif';
-    ctx.fillStyle = '#06b6d4';
-    ctx.fillText('IIT Madras Research Park, Chennai', size / 2, border + topBar / 2 + 12);
-
-    // --- Bottom bar: date + branding ---
-    const botY = size - border - bottomBar;
-    ctx.fillStyle = 'rgba(13, 13, 26, 0.85)';
-    ctx.fillRect(border, botY, size - border * 2, bottomBar);
-
-    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(dateStr, border + 14, botY + bottomBar / 2);
-
-    ctx.font = 'bold 12px "Inter", sans-serif';
+    // Name
+    ctx.font = 'bold 16px "Playfair Display", serif';
     ctx.fillStyle = '#d4a574';
+    ctx.textBaseline = 'top';
+    ctx.fillText('SHAID HAKKEEM', W / 2, botY + 22);
+
+    // Contact line
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.textBaseline = 'top';
+    ctx.fillText('+91 63802 57066  •  shaid360.com', W / 2, botY + 44);
+
+    // Date in small text bottom-right
+    const dateStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.textAlign = 'right';
-    ctx.fillText('GFF 2026', size - border - 14, botY + bottomBar / 2);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(dateStr, W - border - 10, H - border - 6);
 
     // --- Corner accents ---
     ctx.strokeStyle = '#d4a574';
     ctx.lineWidth = 2;
     const c = 20; const o = border + 4;
-    // Top-left
     ctx.beginPath(); ctx.moveTo(o, o + c); ctx.lineTo(o, o); ctx.lineTo(o + c, o); ctx.stroke();
-    // Top-right
-    ctx.beginPath(); ctx.moveTo(size - o - c, o); ctx.lineTo(size - o, o); ctx.lineTo(size - o, o + c); ctx.stroke();
-    // Bottom-left
-    ctx.beginPath(); ctx.moveTo(o, size - o - c); ctx.lineTo(o, size - o); ctx.lineTo(o + c, size - o); ctx.stroke();
-    // Bottom-right
-    ctx.beginPath(); ctx.moveTo(size - o - c, size - o); ctx.lineTo(size - o, size - o); ctx.lineTo(size - o, size - o - c); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W - o - c, o); ctx.lineTo(W - o, o); ctx.lineTo(W - o, o + c); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o, H - o - c); ctx.lineTo(o, H - o); ctx.lineTo(o + c, H - o); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(W - o - c, H - o); ctx.lineTo(W - o, H - o); ctx.lineTo(W - o, H - o - c); ctx.stroke();
 
     photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.9);
     camPhoto.src = photoDataUrl;
