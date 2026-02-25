@@ -247,6 +247,42 @@
     </div>
   </div>
 
+  <!-- Chatbot -->
+  <button class="chat-fab" id="chatFab" title="Ask me anything">
+    <i class="fa-solid fa-robot" id="chatFabIcon"></i>
+  </button>
+
+  <div class="chat-panel" id="chatPanel">
+    <div class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-avatar"><i class="fa-solid fa-robot"></i></div>
+        <div>
+          <div class="chat-header-name">Shaid's Assistant</div>
+          <div class="chat-header-status"><span class="status-dot"></span> Online</div>
+        </div>
+      </div>
+      <button class="chat-close" id="chatClose"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-msg bot">
+        <div class="chat-bubble">Hey! I'm Shaid's assistant. Ask me anything about his work, services, or availability!</div>
+      </div>
+    </div>
+
+    <div class="chat-suggestions" id="chatSuggestions">
+      <button class="chat-chip" data-q="What do you do?">What do you do?</button>
+      <button class="chat-chip" data-q="What are your projects?">Projects</button>
+      <button class="chat-chip" data-q="Are you available?">Availability</button>
+      <button class="chat-chip" data-q="How to contact you?">Contact</button>
+    </div>
+
+    <div class="chat-input-bar">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Type a question..." autocomplete="off" />
+      <button class="chat-send" id="chatSend"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
   <!-- Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="main.js"></script>

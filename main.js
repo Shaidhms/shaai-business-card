@@ -696,5 +696,187 @@ function showToast(msg, icon) {
 // KEYBOARD
 // ==========================================
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') { e.preventDefault(); flipCard(); }
+  if (e.code === 'Space' && document.activeElement !== chatInput) {
+    e.preventDefault();
+    flipCard();
+  }
 });
+
+// ==========================================
+// CHATBOT - FAQ Engine
+// ==========================================
+const chatFab = document.getElementById('chatFab');
+const chatFabIcon = document.getElementById('chatFabIcon');
+const chatPanel = document.getElementById('chatPanel');
+const chatClose = document.getElementById('chatClose');
+const chatMessages = document.getElementById('chatMessages');
+const chatInput = document.getElementById('chatInput');
+const chatSend = document.getElementById('chatSend');
+const chatSuggestions = document.getElementById('chatSuggestions');
+let chatOpen = false;
+
+// Knowledge base
+const faqData = [
+  {
+    keywords: ['who', 'about', 'yourself', 'introduce', 'name', 'you'],
+    answer: "I'm Muhibbuddin Shaid Hakkeem, founder of S.H.A.A.I Solutions. I specialize in Web Development, AI Automation, Voice Agents, and 3D Interactive Websites. With 15+ years of experience, I turn ideas into reality for clients across India and the Gulf region."
+  },
+  {
+    keywords: ['do', 'services', 'offer', 'what do', 'work', 'specialize'],
+    answer: "I offer a range of digital solutions:\n\n- Web Development (React, Next.js, full-stack)\n- AI Automation & AI Agents\n- Voice Agent Development\n- 3D Interactive Website Design\n- E-Commerce Solutions\n- Mobile App Development\n- Digital Consulting & Strategy"
+  },
+  {
+    keywords: ['project', 'portfolio', 'built', 'made', 'created', 'recent'],
+    answer: "Here are some recent projects:\n\n- Voice AI Agents for business automation\n- 3D Interactive Portfolios & Websites\n- AI-powered Business Dashboards\n- E-Commerce platforms for clients\n- Mobile applications\n- Purrkin Pets product tracking dashboard\n\nVisit shaid360.com for the full portfolio!"
+  },
+  {
+    keywords: ['available', 'availability', 'hire', 'freelance', 'open', 'free', 'busy'],
+    answer: "Yes, I'm currently available for freelance projects and collaborations! I work with clients globally and can take on new projects. Feel free to reach out to discuss your requirements.\n\nEmail: mail2shaid@gmail.com\nPhone: +91 63802 57066"
+  },
+  {
+    keywords: ['contact', 'reach', 'email', 'phone', 'call', 'connect', 'touch'],
+    answer: "You can reach me through:\n\n- Email: mail2shaid@gmail.com\n- Phone: +91 63802 57066\n- Website: www.shaid360.com\n- LinkedIn: /in/muhibbuddin-shaid-hakkeem\n- GitHub: /Shaidhms\n- Instagram: @ai360_with_shaid\n\nOr tap 'Save Contact' on the card to add me directly!"
+  },
+  {
+    keywords: ['price', 'cost', 'rate', 'charge', 'budget', 'pricing', 'quote', 'much'],
+    answer: "Pricing depends on the project scope and complexity. I offer competitive rates and work within various budgets. Let's discuss your project — I can provide a custom quote!\n\nEmail me at mail2shaid@gmail.com with your requirements."
+  },
+  {
+    keywords: ['achieve', 'award', 'certificate', 'hackathon', 'sih', 'buildathon', 'experience'],
+    answer: "Key achievements:\n\n- Smart India Hackathon (SIH) Evaluator\n- Buildathon Winner at Social Eagle\n- 15+ years of industry experience\n- 20+ projects delivered\n- Clients across Gulf & India\n- Voice Agent Builder & AI Automation Expert\n- 3D Interactive Web Designer"
+  },
+  {
+    keywords: ['tech', 'stack', 'technology', 'tools', 'language', 'framework', 'skill'],
+    answer: "My tech stack includes:\n\n- Frontend: React, Next.js, Three.js, Tailwind CSS\n- Backend: Node.js, Express, Python\n- AI/ML: OpenAI, Voice AI, LLMs, Automation\n- Database: Supabase, MongoDB, PostgreSQL\n- Mobile: React Native, Capacitor\n- Tools: Vercel, Git, Figma, VS Code"
+  },
+  {
+    keywords: ['ai', 'artificial', 'intelligence', 'agent', 'voice', 'automation', 'bot'],
+    answer: "I build cutting-edge AI solutions:\n\n- Voice AI Agents for customer support & sales\n- AI Automation workflows for businesses\n- Custom AI chatbots & assistants\n- AI-powered dashboards & analytics\n- LLM integration & prompt engineering\n\nAI is the future, and I help businesses leverage it!"
+  },
+  {
+    keywords: ['3d', 'three', 'interactive', 'website', 'design', 'web'],
+    answer: "I create stunning 3D interactive websites using Three.js and WebGL! From immersive portfolios to product showcases, I design experiences that leave a lasting impression — just like this card you're looking at right now!"
+  },
+  {
+    keywords: ['hello', 'hi', 'hey', 'greet', 'good', 'morning', 'evening'],
+    answer: "Hey there! Great to connect. I'm Shaid's virtual assistant. Feel free to ask me about his services, projects, availability, or anything else. How can I help you?"
+  },
+  {
+    keywords: ['thank', 'thanks', 'bye', 'great', 'awesome', 'nice', 'cool'],
+    answer: "Thank you! It was great chatting. If you need anything else, don't hesitate to ask. You can also save my contact directly from the card. Have a great day!"
+  },
+  {
+    keywords: ['location', 'where', 'based', 'city', 'country', 'remote'],
+    answer: "I'm based in India and work with clients globally — including the Gulf region. I'm comfortable with remote collaboration and can work across time zones."
+  }
+];
+
+function findAnswer(input) {
+  const lower = input.toLowerCase().trim();
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const faq of faqData) {
+    let score = 0;
+    for (const kw of faq.keywords) {
+      if (lower.includes(kw)) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = faq;
+    }
+  }
+
+  if (bestScore > 0) return bestMatch.answer;
+
+  return "That's a great question! For more specific details, you can reach Shaid directly:\n\nEmail: mail2shaid@gmail.com\nPhone: +91 63802 57066\n\nOr try asking about services, projects, availability, or tech stack!";
+}
+
+function addMessage(text, sender) {
+  const msg = document.createElement('div');
+  msg.className = `chat-msg ${sender}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.textContent = text;
+  msg.appendChild(bubble);
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg bot';
+  msg.id = 'typingIndicator';
+  msg.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+  chatMessages.appendChild(msg);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+function handleUserMessage(text) {
+  if (!text.trim()) return;
+  addMessage(text, 'user');
+  chatInput.value = '';
+  chatSuggestions.style.display = 'none';
+  playSound('click');
+
+  // Show typing, then respond
+  addTypingIndicator();
+  const delay = 400 + Math.random() * 600;
+  setTimeout(() => {
+    removeTypingIndicator();
+    const answer = findAnswer(text);
+    addMessage(answer, 'bot');
+    playSound('click');
+  }, delay);
+}
+
+// Toggle chat
+chatFab.addEventListener('click', (e) => {
+  e.stopPropagation();
+  chatOpen = !chatOpen;
+  chatPanel.classList.toggle('open', chatOpen);
+  chatFab.classList.toggle('active', chatOpen);
+  chatFabIcon.className = chatOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-robot';
+  if (chatOpen) chatInput.focus();
+  playSound('click');
+});
+
+chatClose.addEventListener('click', (e) => {
+  e.stopPropagation();
+  chatOpen = false;
+  chatPanel.classList.remove('open');
+  chatFab.classList.remove('active');
+  chatFabIcon.className = 'fa-solid fa-robot';
+});
+
+// Send message
+chatSend.addEventListener('click', (e) => {
+  e.stopPropagation();
+  handleUserMessage(chatInput.value);
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleUserMessage(chatInput.value);
+  }
+});
+
+// Suggestion chips
+document.querySelectorAll('.chat-chip').forEach(chip => {
+  chip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    handleUserMessage(chip.dataset.q);
+  });
+});
+
+// Prevent chat interactions from triggering card drag
+chatPanel.addEventListener('mousedown', (e) => e.stopPropagation());
+chatPanel.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+chatFab.addEventListener('mousedown', (e) => e.stopPropagation());
+chatFab.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
