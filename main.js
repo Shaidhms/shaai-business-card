@@ -336,120 +336,27 @@ let tiltX = 0, tiltY = 0;
 let targetTiltX = 0, targetTiltY = 0;
 let currentFlipAngle = 0;
 
-// --- Throw Physics ---
-let throwX = 0, throwY = 0;
-let velocityX = 0, velocityY = 0;
-let isDragging = false;
-let dragStartX = 0, dragStartY = 0;
-let lastDragX = 0, lastDragY = 0, lastDragTime = 0;
-let dragDistance = 0;
-const FRICTION = 0.93;
-const BOUNCE_DAMP = 0.45;
-const SPRING_BACK = 0.04;
-const DRAG_THRESHOLD = 12;
-
 // ==========================================
-// POINTER HELPERS (unified mouse + touch)
+// TAP TO FLIP (simple click/tap handler)
 // ==========================================
-function getPointerPos(e) {
-  if (e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  return { x: e.clientX, y: e.clientY };
-}
-
-// ==========================================
-// DRAG START
-// ==========================================
-function onPointerDown(e) {
-  // Skip if clicking interactive elements on back face
+cardContainer.addEventListener('click', (e) => {
   const target = e.target;
+  // Skip if clicking interactive elements on back face
   if (target.closest && (
     target.closest('a') ||
-    target.closest('.save-btn') ||
-    target.closest('.share-btn') ||
-    target.closest('.flip-back-btn') ||
+    target.closest('button') ||
+    target.closest('.chat-panel') ||
+    target.closest('.chat-fab') ||
     target.closest('.mute-btn')
   )) return;
-
-  const pos = getPointerPos(e);
-  isDragging = true;
-  dragStartX = pos.x;
-  dragStartY = pos.y;
-  lastDragX = pos.x;
-  lastDragY = pos.y;
-  lastDragTime = Date.now();
-  dragDistance = 0;
-  velocityX = 0;
-  velocityY = 0;
-  cardContainer.classList.add('grabbing');
-}
+  flipCard();
+});
 
 // ==========================================
-// DRAG MOVE
+// MOUSE TILT (desktop only)
 // ==========================================
-function onPointerMove(e) {
-  if (!isDragging) return;
-
-  // Prevent page scroll/bounce on mobile while dragging card
-  if (e.cancelable) e.preventDefault();
-
-  const pos = getPointerPos(e);
-  const now = Date.now();
-  const dx = pos.x - lastDragX;
-  const dy = pos.y - lastDragY;
-  const dt = Math.max(now - lastDragTime, 1);
-
-  throwX += dx;
-  throwY += dy;
-  dragDistance += Math.abs(dx) + Math.abs(dy);
-
-  // Track velocity for throw
-  velocityX = (dx / dt) * 16;
-  velocityY = (dy / dt) * 16;
-
-  // Tilt towards drag direction
-  targetTiltX = Math.max(-15, Math.min(15, -dy * 0.4));
-  targetTiltY = Math.max(-15, Math.min(15, dx * 0.4));
-
-  lastDragX = pos.x;
-  lastDragY = pos.y;
-  lastDragTime = now;
-}
-
-// ==========================================
-// DRAG END
-// ==========================================
-function onPointerUp() {
-  if (!isDragging) return;
-  isDragging = false;
-  cardContainer.classList.remove('grabbing');
-
-  // Short tap = flip, long drag = throw
-  if (dragDistance < DRAG_THRESHOLD) {
-    flipCard();
-  }
-
-  targetTiltX = 0;
-  targetTiltY = 0;
-}
-
-// ==========================================
-// EVENT LISTENERS
-// ==========================================
-// Mouse
-cardContainer.addEventListener('mousedown', onPointerDown);
-window.addEventListener('mousemove', onPointerMove);
-window.addEventListener('mouseup', onPointerUp);
-
-// Touch — use { passive: false } on touchmove so we can preventDefault
-cardContainer.addEventListener('touchstart', onPointerDown, { passive: true });
-window.addEventListener('touchmove', onPointerMove, { passive: false });
-window.addEventListener('touchend', onPointerUp);
-window.addEventListener('touchcancel', onPointerUp);
-
-// Mouse tilt when NOT dragging (desktop only)
 if (!isMobile) {
   cardContainer.addEventListener('mousemove', (e) => {
-    if (isDragging) return;
     const rect = cardContainer.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
@@ -458,25 +365,22 @@ if (!isMobile) {
   });
 
   cardContainer.addEventListener('mouseleave', () => {
-    if (!isDragging) { targetTiltX = 0; targetTiltY = 0; }
+    targetTiltX = 0;
+    targetTiltY = 0;
   });
 }
 
-// Gyroscope (mobile)
+// ==========================================
+// GYROSCOPE TILT (mobile)
+// ==========================================
 if (isMobile && window.DeviceOrientationEvent) {
   window.addEventListener('deviceorientation', (e) => {
-    if (!isDragging && e.gamma !== null && e.beta !== null) {
-      targetTiltY = Math.max(-15, Math.min(15, e.gamma * 0.5));
-      targetTiltX = Math.max(-15, Math.min(15, (e.beta - 45) * 0.35));
+    if (e.gamma !== null && e.beta !== null) {
+      targetTiltY = Math.max(-12, Math.min(12, e.gamma * 0.4));
+      targetTiltX = Math.max(-12, Math.min(12, (e.beta - 45) * 0.3));
     }
   });
 }
-
-// Prevent interactive elements from triggering drag
-document.querySelectorAll('.back-content a, .save-btn, .share-btn, .flip-back-btn').forEach(el => {
-  el.addEventListener('mousedown', (e) => e.stopPropagation());
-  el.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-});
 
 // ==========================================
 // MAIN CARD ANIMATION LOOP
@@ -484,54 +388,15 @@ document.querySelectorAll('.back-content a, .save-btn, .share-btn, .flip-back-bt
 function animateCard() {
   requestAnimationFrame(animateCard);
 
-  // --- Throw Physics ---
-  if (!isDragging) {
-    throwX += velocityX;
-    throwY += velocityY;
-    velocityX *= FRICTION;
-    velocityY *= FRICTION;
+  // --- Tilt (smoother interpolation) ---
+  const tiltSpeed = isMobile ? 0.12 : 0.08;
+  tiltX += (targetTiltX - tiltX) * tiltSpeed;
+  tiltY += (targetTiltY - tiltY) * tiltSpeed;
 
-    // Bounce off screen edges
-    const ww = window.innerWidth;
-    const wh = window.innerHeight;
-    const cw = cardContainer.offsetWidth;
-    const ch = cardContainer.offsetHeight;
-    const maxX = (ww - cw) / 2;
-    const maxY = (wh - ch) / 2;
-
-    if (throwX > maxX) {
-      throwX = maxX; velocityX *= -BOUNCE_DAMP;
-      if (Math.abs(velocityX) > 0.5) playSound('bounce');
-    } else if (throwX < -maxX) {
-      throwX = -maxX; velocityX *= -BOUNCE_DAMP;
-      if (Math.abs(velocityX) > 0.5) playSound('bounce');
-    }
-
-    if (throwY > maxY) {
-      throwY = maxY; velocityY *= -BOUNCE_DAMP;
-      if (Math.abs(velocityY) > 0.5) playSound('bounce');
-    } else if (throwY < -maxY) {
-      throwY = -maxY; velocityY *= -BOUNCE_DAMP;
-      if (Math.abs(velocityY) > 0.5) playSound('bounce');
-    }
-
-    // Spring back when settled
-    const speed = Math.abs(velocityX) + Math.abs(velocityY);
-    if (speed < 0.3) {
-      throwX += (0 - throwX) * SPRING_BACK;
-      throwY += (0 - throwY) * SPRING_BACK;
-    }
-  }
-
-  cardContainer.style.transform = `translate(${throwX}px, ${throwY}px)`;
-
-  // --- Tilt ---
-  tiltX += (targetTiltX - tiltX) * 0.08;
-  tiltY += (targetTiltY - tiltY) * 0.08;
-
-  // Smooth flip
+  // Smooth flip (snappier on mobile)
   const targetFlip = isFlipped ? 180 : 0;
-  currentFlipAngle += (targetFlip - currentFlipAngle) * 0.1;
+  const flipSpeed = isMobile ? 0.15 : 0.12;
+  currentFlipAngle += (targetFlip - currentFlipAngle) * flipSpeed;
   card.style.transform = `rotateY(${currentFlipAngle + tiltY}deg) rotateX(${tiltX}deg)`;
 
   // --- Holographic Shimmer ---
@@ -875,8 +740,3 @@ document.querySelectorAll('.chat-chip').forEach(chip => {
   });
 });
 
-// Prevent chat interactions from triggering card drag
-chatPanel.addEventListener('mousedown', (e) => e.stopPropagation());
-chatPanel.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-chatFab.addEventListener('mousedown', (e) => e.stopPropagation());
-chatFab.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
