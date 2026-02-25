@@ -277,6 +277,9 @@ html, body {
   opacity: 0;
   animation: cardEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) 3s both;
   will-change: transform;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .card-container.grabbing {
