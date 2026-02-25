@@ -70,6 +70,12 @@
               <div class="brand-sub">WEB DEV &middot; AI &middot; AUTOMATION</div>
             </div>
 
+            <!-- Available Badge -->
+            <div class="hire-badge">
+              <span class="hire-dot"></span>
+              Available for Hire
+            </div>
+
             <!-- Photo -->
             <div class="photo-container">
               <div class="photo-glow"></div>
@@ -111,14 +117,14 @@
 
             <!-- Front Actions -->
             <div class="front-actions">
-              <a href="https://wa.me/916380257066?text=Hi%20Shaid!%20I%20saw%20your%20card%20%E2%80%94%20let%27s%20connect!" target="_blank" class="whatsapp-btn front-whatsapp" onclick="event.stopPropagation()">
-                <i class="fa-brands fa-whatsapp"></i>
-                WhatsApp
-              </a>
-              <button class="save-btn front-save" id="saveContact">
+              <button class="save-btn front-save" id="saveContact" onclick="event.stopPropagation()">
                 <i class="fa-solid fa-address-book"></i>
                 Save Contact
               </button>
+              <a href="https://wa.me/916380257066?text=Hi%20Shaid!%20I%20saw%20your%20card%20%E2%80%94%20let%27s%20connect!" target="_blank" class="whatsapp-btn front-whatsapp" onclick="event.stopPropagation()">
+                <i class="fa-brands fa-whatsapp"></i>
+                Chat on WhatsApp
+              </a>
             </div>
           </div>
         </div>
@@ -234,9 +240,13 @@
 
             <!-- Action Buttons -->
             <div class="action-section">
+              <button class="connect-btn" id="quickConnectBtn">
+                <i class="fa-solid fa-camera"></i>
+                Quick Connect
+              </button>
               <button class="share-btn" id="shareCard">
                 <i class="fa-solid fa-share-nodes"></i>
-                Share Card
+                Share
               </button>
             </div>
           </div>
@@ -279,6 +289,78 @@
     <div class="chat-input-bar">
       <input type="text" class="chat-input" id="chatInput" placeholder="Type a question..." autocomplete="off" />
       <button class="chat-send" id="chatSend"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Quick Connect Overlay -->
+  <div class="connect-overlay" id="connectOverlay">
+    <div class="connect-panel">
+      <button class="connect-close-btn" id="connectCloseBtn">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="connect-title" id="connectTitle">
+        <i class="fa-solid fa-bolt"></i> QUICK CONNECT
+      </div>
+      <p class="connect-desc" id="connectDesc">Snap a pic & drop your details &mdash; let's stay connected!</p>
+
+      <!-- Camera -->
+      <div class="connect-cam-wrap" id="connectCamWrap">
+        <video id="camFeed" autoplay playsinline muted></video>
+        <img id="camPhoto" class="connect-cam-photo" />
+        <canvas id="camCanvas"></canvas>
+        <div class="connect-cam-placeholder" id="camPlaceholder">
+          <i class="fa-solid fa-user"></i>
+        </div>
+      </div>
+
+      <div class="connect-cam-actions" id="connectCamActions">
+        <button class="cam-snap-btn" id="camSnapBtn">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+        <button class="cam-retake-btn" id="camRetakeBtn" style="display:none;">
+          <i class="fa-solid fa-rotate-left"></i> Retake
+        </button>
+      </div>
+
+      <!-- Form -->
+      <div class="connect-fields" id="connectFields">
+        <div class="connect-field">
+          <i class="fa-solid fa-user-tag"></i>
+          <input type="text" id="connectNameInput" placeholder="Your name" autocomplete="off" />
+        </div>
+        <div class="connect-field">
+          <i class="fa-solid fa-at"></i>
+          <input type="text" id="connectContactInput" placeholder="Email or phone" autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- Event Stamp -->
+      <div class="connect-event-stamp" id="connectStamp">
+        <div class="stamp-icon"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="stamp-text">
+          <span class="stamp-label">Connected at</span>
+          <span class="stamp-event">GFF 2026</span>
+        </div>
+        <div class="stamp-date" id="stampDate"></div>
+      </div>
+
+      <!-- Submit -->
+      <button class="connect-submit-btn" id="connectSubmitBtn">
+        <i class="fa-solid fa-paper-plane"></i>
+        Save Connection
+      </button>
+
+      <!-- Success State -->
+      <div class="connect-success" id="connectSuccess">
+        <div class="success-check"><i class="fa-solid fa-check"></i></div>
+        <div class="success-title">Connected!</div>
+        <div class="success-desc" id="successDesc">Nice meeting you!</div>
+        <a class="success-whatsapp" id="successWhatsapp" target="_blank">
+          <i class="fa-brands fa-whatsapp"></i> Say Hi on WhatsApp
+        </a>
+        <button class="success-done-btn" id="successDoneBtn">Done</button>
+      </div>
     </div>
   </div>
 

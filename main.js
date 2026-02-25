@@ -458,6 +458,7 @@ function flipCard() {
   }
 
   createFlipBurst();
+  createLightLeak();
 }
 
 flipBackBtn.addEventListener('click', (e) => {
@@ -842,3 +843,209 @@ document.querySelectorAll('.chat-chip').forEach(chip => {
     handleUserMessage(chip.dataset.q);
   });
 });
+
+// ==========================================
+// CARD EDGE LIGHT LEAK
+// ==========================================
+function createLightLeak() {
+  const rect = cardContainer.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+
+  // Vertical edge light (the seam of the flip)
+  const edge = document.createElement('div');
+  edge.className = 'light-leak-edge';
+  edge.style.left = cx + 'px';
+  edge.style.top = (rect.top - 25) + 'px';
+  edge.style.height = (rect.height + 50) + 'px';
+  document.body.appendChild(edge);
+
+  // Ambient screen flash
+  const flash = document.createElement('div');
+  flash.className = 'light-leak-ambient';
+  document.body.appendChild(flash);
+
+  setTimeout(() => { edge.remove(); flash.remove(); }, 900);
+}
+
+// ==========================================
+// QUICK CONNECT - Camera & Form
+// ==========================================
+const connectOverlay = document.getElementById('connectOverlay');
+const connectCloseBtn = document.getElementById('connectCloseBtn');
+const quickConnectBtn = document.getElementById('quickConnectBtn');
+const camFeed = document.getElementById('camFeed');
+const camCanvas = document.getElementById('camCanvas');
+const camPhoto = document.getElementById('camPhoto');
+const camPlaceholder = document.getElementById('camPlaceholder');
+const camSnapBtn = document.getElementById('camSnapBtn');
+const camRetakeBtn = document.getElementById('camRetakeBtn');
+const connectNameInput = document.getElementById('connectNameInput');
+const connectContactInput = document.getElementById('connectContactInput');
+const connectSubmitBtn = document.getElementById('connectSubmitBtn');
+const connectSuccess = document.getElementById('connectSuccess');
+const successDesc = document.getElementById('successDesc');
+const successWhatsapp = document.getElementById('successWhatsapp');
+const successDoneBtn = document.getElementById('successDoneBtn');
+
+let camStream = null;
+let photoDataUrl = null;
+
+// Open overlay
+quickConnectBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  connectOverlay.classList.add('open');
+  startCamera();
+  playSound('click');
+  document.getElementById('stampDate').textContent =
+    new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+});
+
+// Close overlay
+connectCloseBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeConnect();
+});
+
+connectOverlay.addEventListener('click', (e) => {
+  if (e.target === connectOverlay) closeConnect();
+});
+
+function closeConnect() {
+  connectOverlay.classList.remove('open');
+  stopCamera();
+  resetConnectForm();
+}
+
+// Camera
+async function startCamera() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 300 }, height: { ideal: 300 } }
+    });
+    camFeed.srcObject = camStream;
+    camFeed.style.display = 'block';
+    camPlaceholder.style.display = 'none';
+  } catch (err) {
+    camPlaceholder.style.display = 'flex';
+    camFeed.style.display = 'none';
+  }
+}
+
+function stopCamera() {
+  if (camStream) {
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+  camFeed.srcObject = null;
+}
+
+// Snap photo
+camSnapBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  playSound('click');
+
+  if (camStream) {
+    const ctx = camCanvas.getContext('2d');
+    camCanvas.width = 300;
+    camCanvas.height = 300;
+    // Mirror the image to match the mirrored video preview
+    ctx.translate(300, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(camFeed, 0, 0, 300, 300);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    photoDataUrl = camCanvas.toDataURL('image/jpeg', 0.85);
+    camPhoto.src = photoDataUrl;
+    camPhoto.style.display = 'block';
+    camFeed.style.display = 'none';
+    stopCamera();
+  }
+
+  camSnapBtn.style.display = 'none';
+  camRetakeBtn.style.display = 'flex';
+
+  // Flash effect on the cam wrap
+  const wrap = document.getElementById('connectCamWrap');
+  wrap.style.boxShadow = '0 0 30px rgba(255,255,255,0.5), 0 0 60px rgba(212,165,116,0.3)';
+  setTimeout(() => { wrap.style.boxShadow = ''; }, 400);
+});
+
+// Retake
+camRetakeBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  camPhoto.style.display = 'none';
+  camRetakeBtn.style.display = 'none';
+  camSnapBtn.style.display = 'flex';
+  photoDataUrl = null;
+  startCamera();
+});
+
+// Submit
+connectSubmitBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const name = connectNameInput.value.trim();
+  const contact = connectContactInput.value.trim();
+
+  if (!name) {
+    connectNameInput.parentElement.style.borderColor = 'rgba(255, 100, 100, 0.5)';
+    connectNameInput.focus();
+    setTimeout(() => { connectNameInput.parentElement.style.borderColor = ''; }, 2000);
+    return;
+  }
+
+  playSound('click');
+
+  // Save to localStorage
+  const connections = JSON.parse(localStorage.getItem('gff_connections') || '[]');
+  connections.push({
+    name,
+    contact,
+    photo: photoDataUrl,
+    date: new Date().toISOString(),
+    event: 'GFF 2026'
+  });
+  localStorage.setItem('gff_connections', JSON.stringify(connections));
+
+  // Hide form, show success
+  document.getElementById('connectTitle').style.display = 'none';
+  document.getElementById('connectDesc').style.display = 'none';
+  document.getElementById('connectCamWrap').style.display = 'none';
+  document.getElementById('connectCamActions').style.display = 'none';
+  document.getElementById('connectFields').style.display = 'none';
+  document.getElementById('connectStamp').style.display = 'none';
+  connectSubmitBtn.style.display = 'none';
+
+  successDesc.textContent = `Nice meeting you, ${name}!`;
+  const waText = encodeURIComponent(
+    `Hi Shaid! I'm ${name}${contact ? ' (' + contact + ')' : ''} — we just connected at GFF! Let's keep in touch.`
+  );
+  successWhatsapp.href = `https://wa.me/916380257066?text=${waText}`;
+  connectSuccess.classList.add('visible');
+});
+
+// Done
+successDoneBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  closeConnect();
+});
+
+function resetConnectForm() {
+  connectNameInput.value = '';
+  connectContactInput.value = '';
+  photoDataUrl = null;
+  camPhoto.style.display = 'none';
+  camRetakeBtn.style.display = 'none';
+  camSnapBtn.style.display = 'flex';
+  connectSuccess.classList.remove('visible');
+
+  // Restore form elements
+  document.getElementById('connectTitle').style.display = '';
+  document.getElementById('connectDesc').style.display = '';
+  document.getElementById('connectCamWrap').style.display = '';
+  document.getElementById('connectCamActions').style.display = '';
+  document.getElementById('connectFields').style.display = '';
+  document.getElementById('connectStamp').style.display = '';
+  connectSubmitBtn.style.display = '';
+
+  camPlaceholder.style.display = 'flex';
+  camFeed.style.display = 'none';
+}

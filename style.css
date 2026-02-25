@@ -452,6 +452,7 @@ html, body {
 .card.entered .front-content > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 0.4s; }
 .card.entered .front-content > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 0.5s; }
 .card.entered .front-content > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 0.6s; }
+.card.entered .front-content > *:nth-child(7) { opacity: 1; transform: translateY(0); transition-delay: 0.7s; }
 
 /* Brand */
 .brand {
@@ -692,23 +693,23 @@ html, body {
 .front-actions {
   margin-top: auto;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   width: 100%;
 }
 
+.front-actions .front-save,
 .front-actions .front-whatsapp {
-  flex: 1;
-  font-size: 0.68rem;
-  padding: 9px 0;
+  width: 100%;
+  font-size: 0.7rem;
+  padding: 10px 0;
   text-align: center;
   justify-content: center;
-}
-
-.front-actions .front-save {
-  flex: 1;
-  font-size: 0.68rem;
-  padding: 9px 0;
-  justify-content: center;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ==========================================
@@ -1466,6 +1467,602 @@ html, body {
     left: 16px;
     width: 46px;
     height: 46px;
+    font-size: 1rem;
+  }
+}
+
+/* ==========================================
+   AVAILABLE FOR HIRE BADGE
+   ========================================== */
+.hire-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #4ade80;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.hire-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  animation: hirePulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes hirePulse {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); }
+  50% { opacity: 0.6; transform: scale(1.3); box-shadow: 0 0 14px rgba(34, 197, 94, 0.9), 0 0 28px rgba(34, 197, 94, 0.3); }
+}
+
+/* ==========================================
+   CARD EDGE LIGHT LEAK
+   ========================================== */
+.light-leak-edge {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 6;
+  pointer-events: none;
+  border-radius: 3px;
+  animation: lightLeakFlash 0.75s ease-out forwards;
+}
+
+@keyframes lightLeakFlash {
+  0% {
+    opacity: 0;
+    width: 2px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 10px 4px rgba(255, 255, 255, 0.4);
+  }
+  15% {
+    opacity: 1;
+    width: 6px;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow:
+      0 0 30px 12px rgba(255, 255, 255, 0.6),
+      0 0 60px 25px rgba(212, 165, 116, 0.3),
+      0 0 100px 50px rgba(6, 182, 212, 0.12);
+  }
+  45% {
+    opacity: 0.4;
+    width: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow:
+      0 0 20px 8px rgba(255, 255, 255, 0.2),
+      0 0 50px 20px rgba(212, 165, 116, 0.1);
+  }
+  100% {
+    opacity: 0;
+    width: 30px;
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+.light-leak-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(212, 165, 116, 0.03) 30%,
+    transparent 60%
+  );
+  animation: ambientLeakFlash 0.6s ease-out forwards;
+}
+
+@keyframes ambientLeakFlash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ==========================================
+   CONNECT BUTTON (Back Face)
+   ========================================== */
+.connect-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--cyan), #0891b2);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+}
+
+.connect-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+}
+
+.connect-btn:active {
+  transform: scale(0.96);
+  transition-duration: 0.1s;
+}
+
+/* ==========================================
+   QUICK CONNECT OVERLAY
+   ========================================== */
+.connect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(6, 6, 14, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.connect-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.connect-panel {
+  width: 340px;
+  max-height: 88vh;
+  border-radius: 22px;
+  background: linear-gradient(155deg, rgba(13, 13, 26, 0.97) 0%, rgba(18, 18, 35, 0.97) 50%, rgba(10, 10, 20, 0.97) 100%);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(212, 165, 116, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 28px 24px;
+  position: relative;
+  overflow-y: auto;
+  scrollbar-width: none;
+  transform: scale(0.88) translateY(30px);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.connect-overlay.open .connect-panel {
+  transform: scale(1) translateY(0);
+}
+
+.connect-panel::-webkit-scrollbar { display: none; }
+
+.connect-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.connect-close-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.connect-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.connect-title i {
+  color: var(--cyan);
+  font-size: 0.9rem;
+}
+
+.connect-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 22px;
+  line-height: 1.4;
+}
+
+/* Camera Viewfinder */
+.connect-cam-wrap {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  overflow: hidden;
+  position: relative;
+  background: rgba(212, 165, 116, 0.03);
+  border: 2px solid rgba(212, 165, 116, 0.25);
+  box-shadow:
+    0 0 20px rgba(212, 165, 116, 0.08),
+    inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.connect-cam-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  transform: scaleX(-1);
+  display: none;
+}
+
+.connect-cam-wrap .connect-cam-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: none;
+}
+
+.connect-cam-wrap canvas {
+  display: none;
+}
+
+.connect-cam-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 2.5rem;
+  opacity: 0.3;
+}
+
+/* Camera Actions */
+.connect-cam-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.cam-snap-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2.5px solid var(--gold);
+  background: rgba(212, 165, 116, 0.08);
+  color: var(--gold);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.cam-snap-btn::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(212, 165, 116, 0.3);
+}
+
+.cam-snap-btn:hover {
+  background: rgba(212, 165, 116, 0.18);
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(212, 165, 116, 0.2);
+}
+
+.cam-snap-btn:active {
+  transform: scale(0.92);
+  transition-duration: 0.1s;
+}
+
+.cam-retake-btn {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.68rem;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.cam-retake-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--glass-border-hover);
+}
+
+/* Form Fields */
+.connect-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.connect-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 165, 116, 0.1);
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.connect-field:focus-within {
+  border-color: rgba(212, 165, 116, 0.35);
+  box-shadow: 0 0 15px rgba(212, 165, 116, 0.06);
+}
+
+.connect-field i {
+  color: var(--gold);
+  font-size: 0.75rem;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.connect-field input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+}
+
+.connect-field input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Event Stamp */
+.connect-event-stamp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(6, 182, 212, 0.04);
+  border: 1px dashed rgba(6, 182, 212, 0.2);
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.connect-event-stamp::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.04), transparent);
+  animation: stampShine 4s ease-in-out infinite;
+}
+
+@keyframes stampShine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.stamp-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(6, 182, 212, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cyan);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.stamp-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.stamp-label {
+  font-size: 0.5rem;
+  color: var(--text-muted);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.stamp-event {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+}
+
+.stamp-date {
+  margin-left: auto;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Submit Button */
+.connect-submit-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--gold), #c49660);
+  color: #0a0a15;
+  box-shadow: 0 4px 20px rgba(212, 165, 116, 0.25);
+  transition: all 0.3s ease;
+}
+
+.connect-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(212, 165, 116, 0.4);
+}
+
+.connect-submit-btn:active {
+  transform: scale(0.97);
+  transition-duration: 0.1s;
+}
+
+/* Success State */
+.connect-success {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.connect-success.visible {
+  display: flex;
+  animation: successReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes successReveal {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.success-check {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.08);
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  font-size: 1.6rem;
+  margin-bottom: 16px;
+  animation: successCheckPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@keyframes successCheckPop {
+  0% { transform: scale(0) rotate(-30deg); }
+  60% { transform: scale(1.15) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.success-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.success-desc {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 22px;
+}
+
+.success-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(37, 211, 102, 0.2);
+}
+
+.success-whatsapp i {
+  font-size: 1rem;
+}
+
+.success-whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+}
+
+.success-done-btn {
+  padding: 8px 28px;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  transition: all 0.2s ease;
+}
+
+.success-done-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border-hover);
+}
+
+/* Quick Connect Mobile */
+@media (max-width: 420px) {
+  .connect-panel {
+    width: 92vw;
+    padding: 24px 18px;
+    max-height: 85vh;
+  }
+
+  .connect-cam-wrap {
+    width: 110px;
+    height: 110px;
+  }
+
+  .cam-snap-btn {
+    width: 44px;
+    height: 44px;
     font-size: 1rem;
   }
 }
